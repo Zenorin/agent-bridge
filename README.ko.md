@@ -25,6 +25,14 @@ AI 코딩 도구끼리 일을 주고받게 해 주는 작은 로컬 작업함이
 ## 설치 (Windows x64)
 
 1. [Releases](../../releases)에서 `agent-bridge-win-x64.zip`을 받아 아무 폴더에 풀어요. Node.js가 들어 있어서 따로 설치할 필요가 없어요.
+
+   zip 안의 스크립트에는 코드 서명이 없어서, Windows가 "Windows의 PC 보호" 경고를 띄우거나 파일을 막을 수 있어요.
+   압축을 풀기 전에 Release 페이지의 SHA-256 값과 같은지 확인한 뒤 차단을 풀어 주세요.
+
+   ```powershell
+   Get-FileHash .\agent-bridge-win-x64.zip -Algorithm SHA256
+   Unblock-File .\agent-bridge-win-x64.zip
+   ```
 2. 쓸 AI CLI(Codex, Claude Code, Antigravity `agy`) 중 하나 이상을 직접 설치하고 로그인해요.
 3. `Self Test.cmd`를 실행해요. 모델을 부르지 않고 모의 에이전트로 설치 상태만 점검해요.
 4. 찾은 CLI를 확인해요.

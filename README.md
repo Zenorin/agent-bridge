@@ -26,6 +26,14 @@ The queue itself never calls a model. Model usage only happens when a runner exe
 
 1. Download `agent-bridge-win-x64.zip` from the [Releases](../../releases) page and unzip it to any folder.
    A Node.js runtime is bundled, so you do not need to install Node.
+
+   The scripts in the zip are not code-signed, so Windows may show "Windows protected your PC" or block the files.
+   Before unzipping, you can check the file against the SHA-256 value on the release page, then unblock it:
+
+   ```powershell
+   Get-FileHash .\agent-bridge-win-x64.zip -Algorithm SHA256
+   Unblock-File .\agent-bridge-win-x64.zip
+   ```
 2. Install and sign in to at least one agent CLI yourself (Codex, Claude Code or Antigravity `agy`).
 3. Run `Self Test.cmd`. It checks the bundle with mock agents and does not call any model.
 4. Check which CLIs were found:
