@@ -1,0 +1,90 @@
+{
+  "required_plugins": [],
+  "optional_hooks": [],
+  "adapters": {},
+  "profiles": {
+    "standard": {
+      "plugins": "*",
+      "input_fields": [
+        "file_refs",
+        "base_revision",
+        "handoff_ref",
+        "short_summary"
+      ],
+      "output_fields": [
+        "summary",
+        "thread_id",
+        "turn_id",
+        "final_text"
+      ]
+    },
+    "review": {
+      "plugins": [
+        "github@openai-curated"
+      ],
+      "input_fields": [
+        "file_refs",
+        "base_revision"
+      ],
+      "output_fields": [
+        "summary",
+        "thread_id"
+      ]
+    },
+    "light": {
+      "plugins": [],
+      "input_fields": [
+        "file_refs"
+      ],
+      "output_fields": [
+        "summary",
+        "thread_id"
+      ],
+      "codex_config": {
+        "project_doc_max_bytes": 0,
+        "skills.include_instructions": false
+      }
+    },
+    "code": {
+      "plugins": [
+        "github@openai-curated",
+        "openai-developers@openai-curated"
+      ],
+      "input_fields": [
+        "file_refs",
+        "base_revision",
+        "handoff_ref"
+      ],
+      "output_fields": [
+        "summary",
+        "thread_id"
+      ]
+    },
+    "document": {
+      "plugins": [
+        "documents@openai-primary-runtime",
+        "pdf@openai-primary-runtime"
+      ],
+      "input_fields": [
+        "file_refs",
+        "base_revision",
+        "handoff_ref",
+        "short_summary"
+      ],
+      "output_fields": [
+        "summary",
+        "thread_id"
+      ]
+    },
+    "image": {
+      "plugins": [],
+      "input_fields": [
+        "file_refs"
+      ],
+      "output_fields": [
+        "summary",
+        "thread_id"
+      ]
+    }
+  }
+}

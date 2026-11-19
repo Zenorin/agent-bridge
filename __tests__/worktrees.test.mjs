@@ -1,0 +1,23 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { listWorktrees, createWorktree, setWorktreeLocked, verifyWorktree } from '../worktrees.mjs';
+test('worktree 생성·조회·검증·잠금은 실제 Git에서 동작하고 미커밋 변경은 복사하지 않는다',(t)=>{
+ const root=mkdtempSync(path.join(os.tmpdir(),'bridge-git-')); t.after(()=>rmSync(root,{recursive:true,force:true}));
+ const repo=path.join(root,'repo'); const git=(...args)=>execFileSync('git',args,{cwd:root,encoding:'utf8',windowsHide:true});
+ git('init',repo); writeFileSync(path.join(repo,'a.txt'),'base');
+ git('-C',repo,'add','.'); git('-C',repo,'-c','user.name=Test','-c','user.email=test@example.invalid','commit','-m','base');
+ writeFileSync(path.join(repo,'a.txt'),'dirty');
+ const created=createWorktree(repo,{name:'review',base:'HEAD'});
+ assert.equal(created.branch,'bridge/review'); assert.equal(verifyWorktree(repo,created.path),created.path);
+ const trees=listWorktrees(repo); assert.equal(trees.length,2); assert.equal(trees.find(x=>x.path===repo).dirty,true);
+ assert.equal(trees.find(x=>x.path===created.path).dirty,false);
+ setWorktreeLocked(repo,created.path,true); assert.equal(listWorktrees(repo).find(x=>x.path===created.path).locked,true);
+ setWorktreeLocked(repo,created.path,false); assert.equal(listWorktrees(repo).find(x=>x.path===created.path).locked,false);
+ assert.throws(()=>createWorktree(repo,{name:'../bad',base:'HEAD'}),/name/i);
+ assert.throws(()=>createWorktree(repo,{name:'bad',base:'--help'}),/ref/i);
+ assert.throws(()=>verifyWorktree(repo,root),/worktree/i);
+});

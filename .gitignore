@@ -1,0 +1,11 @@
+node_modules/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+clients.json
+.env
+release/
+agent-bridge-win-x64/
+agent-bridge-win-x64.zip
+agent-bridge-win-x64.zip.sha256

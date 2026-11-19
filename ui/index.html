@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent Bridge</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">Agent Bridge</div>
+    <p class="muted">로컬 에이전트 작업 관리</p>
+    <nav>
+      <button type="button" class="nav-button" data-tab="tasks" aria-controls="tab-tasks">작업</button>
+      <button type="button" class="nav-button" data-tab="worktrees" aria-controls="tab-worktrees">작업 폴더</button>
+      <button type="button" class="nav-button" data-tab="profiles" aria-controls="tab-profiles">프로필</button>
+    </nav>
+    <footer class="muted">로컬 전용</footer>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <h1 id="page-title">작업</h1>
+      <span id="connection" role="status"></span>
+      <button type="button" id="refresh">새로고침</button>
+    </header>
+
+    <div id="notice" role="status" aria-live="polite"></div>
+
+    <section id="runner-bar" class="runner-bar" aria-label="실행기">
+      <span id="runner-state"></span>
+      <span id="write-mode"></span>
+      <button type="button" id="start-runner">실행기 시작</button>
+      <button type="button" id="stop-runner">실행기 중단</button>
+    </section>
+
+    <section id="tab-tasks" class="panel" aria-label="작업">
+      <div class="toolbar">
+        <button type="button" id="new-task" class="primary" aria-haspopup="dialog" aria-controls="task-dialog">새 작업</button>
+        <select id="status-filter" aria-label="작업">
+          <option value="">전체</option>
+          <option value="queued">대기 중</option>
+          <option value="working">작업 중</option>
+          <option value="ready">준비됨</option>
+          <option value="blocked">진행 불가</option>
+          <option value="cancelled">취소됨</option>
+        </select>
+      </div>
+      <div class="split">
+        <div id="task-list" class="task-list"></div>
+        <section id="task-detail" class="detail" aria-label="상세 정보">
+          <p class="muted">작업을 선택하면 상세 정보를 볼 수 있습니다.</p>
+        </section>
+      </div>
+    </section>
+
+    <section id="tab-worktrees" class="panel" aria-labelledby="worktrees-heading" hidden>
+      <h2 id="worktrees-heading">작업 폴더</h2>
+      <p id="worktree-help" class="muted">기존 커밋을 기준으로 별도 작업 폴더(Git worktree)를 만듭니다. 미커밋 변경은 복사되지 않습니다.</p>
+      <p>Git 저장소 <span id="repo-path" class="code"></span></p>
+      <div id="worktree-list"></div>
+      <form id="worktree-form" aria-describedby="worktree-help">
+        <div class="form-grid">
+          <div class="field">
+            <label for="worktree-name">작업 폴더 이름</label>
+            <input type="text" id="worktree-name" name="name" required>
+          </div>
+          <div class="field">
+            <label for="worktree-base">기준 브랜치 또는 커밋</label>
+            <input type="text" id="worktree-base" name="base" value="HEAD">
+          </div>
+        </div>
+        <div class="actions">
+          <button type="submit" class="primary">작업 폴더 만들기</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="tab-profiles" class="panel" aria-labelledby="profiles-heading" hidden>
+      <h2 id="profiles-heading">프로필</h2>
+      <p class="muted">필수 훅은 유지되며, 전역 설정은 변경하지 않습니다.</p>
+      <div class="toolbar">
+        <div class="field">
+          <label for="profile-select">프로필</label>
+          <select id="profile-select"></select>
+        </div>
+        <button type="button" id="inspect-runtime">실행 환경 점검</button>
+      </div>
+      <div id="runtime-result"></div>
+      <p class="muted">선택한 필드만 전달하며, 전체 결과는 상세 기록에 남습니다.</p>
+      <details>
+        <summary>프로필 JSON</summary>
+        <form id="profiles-form">
+          <div class="field">
+            <textarea id="profiles-json" name="profiles" class="code" rows="22" spellcheck="false" aria-label="프로필 JSON"></textarea>
+          </div>
+          <div class="actions">
+            <button type="submit" class="primary">프로필 저장</button>
+          </div>
+        </form>
+      </details>
+      <p class="muted">필드 필터는 등록한 로컬 도구 어댑터에만 적용됩니다. 외부 플러그인 내부의 데이터 전송은 제어하지 않습니다.</p>
+    </section>
+  </main>
+
+  <dialog id="task-dialog" aria-labelledby="task-dialog-title">
+    <h2 id="task-dialog-title">새 작업</h2>
+    <form id="task-form">
+      <div class="form-grid">
+        <div class="field">
+          <label for="task-goal">작업 목표</label>
+          <textarea id="task-goal" name="goal" required></textarea>
+        </div>
+        <div class="field">
+          <label for="task-acceptance">완료 조건</label>
+          <textarea id="task-acceptance" name="acceptance"></textarea>
+        </div>
+        <div class="field">
+          <label for="task-profile">프로필</label>
+          <select id="task-profile" name="profile"></select>
+        </div>
+        <div class="field">
+          <label for="task-cwd">작업 경로</label>
+          <input type="text" id="task-cwd" name="cwd" required>
+        </div>
+        <div class="field">
+          <label for="task-files">참조 파일</label>
+          <textarea id="task-files" name="fileRefs"></textarea>
+        </div>
+        <div class="field">
+          <label for="task-writes">쓰기 대상 파일</label>
+          <textarea id="task-writes" name="writeFiles"></textarea>
+        </div>
+        <div class="field">
+          <label for="task-sender">보낸 에이전트</label>
+          <select id="task-sender" name="sender">
+            <option value="claude-code" aria-label="claude-code"></option>
+            <option value="codex" aria-label="codex"></option>
+            <option value="gemini" aria-label="Gemini">Gemini</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="task-recipient">받는 에이전트</label>
+          <select id="task-recipient" name="recipient">
+            <option value="codex" aria-label="codex"></option>
+            <option value="claude-code" aria-label="claude-code"></option>
+            <option value="gemini" aria-label="Gemini">Gemini</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="task-sandbox">실행 권한 범위</label>
+          <select id="task-sandbox" name="sandbox">
+            <option value="read-only">읽기 전용</option>
+            <option value="workspace-write">작업 공간 쓰기 허용</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="task-model">모델</label>
+          <input type="text" id="task-model" name="model">
+        </div>
+        <div class="field">
+          <label for="task-effort">추론 수준</label>
+          <select id="task-effort" name="effort">
+            <option value=""></option>
+            <option value="low" aria-label="low"></option>
+            <option value="medium" aria-label="medium"></option>
+            <option value="high" aria-label="high"></option>
+            <option value="xhigh" aria-label="xhigh"></option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="task-thread">스레드 ID</label>
+          <input type="text" id="task-thread" name="threadId">
+        </div>
+      </div>
+      <div class="actions">
+        <button type="submit" class="primary">작업 제출</button>
+        <button type="button" id="preview-task" aria-controls="packet-preview">전달 데이터 미리보기</button>
+        <button type="button" id="close-task">닫기</button>
+      </div>
+      <pre id="packet-preview" class="code" aria-label="전달 데이터 미리보기" tabindex="0" hidden></pre>
+    </form>
+  </dialog>
+</body>
+</html>

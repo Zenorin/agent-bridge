@@ -1,0 +1,36 @@
+{
+  "quickStartMarkdown": "# Agent Bridge 빠른 시작\n\n## 1. 압축 해제와 CLI 준비\nWindows x64 ZIP을 로컬 폴더에 풀고, 해당 폴더에서 PowerShell을 엽니다. Node.js 22.20.0 Windows x64 런타임이 동봉되어 있어 Bridge 실행을 위한 Node/npm 별도 설치는 필요 없습니다.\n\n사용할 에이전트 CLI는 이 PC에 별도로 설치하고 해당 사용자로 로그인하세요. 인증정보, Ego 브라우저, API 키, 기존 DB·프로필은 번들에 포함되지 않습니다. Codex와 Gemini만 사용할 경우 Claude는 설치하거나 호출할 필요가 없습니다.\n\n## 2. 설치 점검과 경로 확인\n`Self Test.cmd`를 실행하면 모델 호출 없이 모의 프로토콜로 설치 조합을 점검합니다. 실제 에이전트 호출 성공을 확인하는 테스트는 아닙니다.\n\nCLI 설치 경로는 다음 명령으로 확인하세요.\n```powershell\n.\\agent-bridge.cmd doctor\n```\n이 명령은 CLI 설치 경로만 탐지합니다. 로그인·구독 상태나 실제 호출 성공 여부는 확인하지 않습니다. Gemini 연결에는 Antigravity의 `agy` CLI를 사용하며, 일반 `gemini` 명령은 자동 선택하지 않습니다.\n\n### 실제 연결 점검\n`Check Connections.cmd`를 더블클릭하거나 배포판 폴더의 PowerShell에서 다음 명령을 실행하세요. Git은 필요하지 않습니다.\n```powershell\n.\\agent-bridge.cmd check-connections\n```\n설치된 Codex와 Gemini 각각에 짧은 무작위 확인 문구를 응답하도록 한 번씩 실제 호출을 시도합니다. Claude는 호출하지 않으며 설치할 필요도 없습니다. Codex가 설치되어 있지 않으면 해당 실제 호출을 생략합니다. 설치되어 있으면 먼저 `codex login status`를 확인하며, 로그아웃 상태이면 실제 호출을 생략합니다. Gemini는 실제 응답에 성공하면 인증도 함께 확인합니다. 인증정보가 저장되어 있다는 사실만으로 실제 호출 성공이 확인되는 것은 아닙니다.\n\n결과에는 로그인 필요, 사용 한도, 권한 문제, 시간 초과, 응답 불일치 등을 구분해 표시합니다. 실패에 대한 자동 재시도는 없습니다. 로그인·인증 오류와 모델·추론 설정 오류는 원인이 다르므로, 설정 오류를 로그인 실패로 단정하지 마세요. 로그인이 필요하면 사용자가 PowerShell에서 `codex login` 또는 `agy`를 실행해 직접 로그인한 뒤 다시 점검하세요.\n\n점검은 빈 임시 폴더에서 짧은 프롬프트로 진행하며 파일 조회·편집 도구는 사용하지 않습니다. 토큰 사용을 줄이기 위해 지원하는 기본 모델에는 낮은 추론 설정을 사용하고, 추론 수준이 모델 이름에 포함된 Gemini 설정 모델은 기존 값을 유지합니다. 각 CLI에 설정된 모델을 다른 모델로 자동 바꾸지 않습니다. 기존 사용자 권한과 보호 훅은 유지합니다. Bridge의 기존 작업 큐와 사용자 프로젝트는 읽거나 변경하지 않습니다. CLI 자체의 인증 갱신과 대화 기록은 각 CLI가 관리합니다.\n\n각 CLI 실제 호출에 사용량이 발생하며 고정된 토큰 상한이나 적은 입력 토큰을 보장하지 않습니다. CLI의 기본 지침과 필수 플러그인 문맥이 입력에 포함될 수 있으므로 출력이 짧아도 입력 토큰이 발생합니다. 각 CLI에 설정된 모델을 사용하므로 사용량은 환경에 따라 다릅니다. 공급자별 입력·캐시·출력 측정치를 확인하세요. 공급자마다 캐시 계산 방식이 달라 단순 합산하지 않습니다.\n\n### 자동 탐지가 안 될 때\n`%USERPROFILE%\\.agent-bridge\\clients.json`을 열어 필요한 항목만 기존 값과 병합하세요. 파일이 없으면 새로 만듭니다. 기존 파일을 아래 예시로 통째로 덮어쓰지 말고, 지정하려는 에이전트의 `executable`만 추가하거나 수정하세요. 다른 항목과 설정은 그대로 둡니다.\n\n아래 경로는 예시이므로 실제 설치 경로로 바꾸세요.\n```json\n{\n  \"codex\": {\"executable\": \"C:/tools/codex.exe\"},\n  \"claude-code\": {\"executable\": \"C:/tools/claude.exe\"},\n  \"gemini\": {\"executable\": \"C:/tools/agy.exe\"}\n}\n```\nWindows의 `.cmd`·`.bat` 경로 대신 네이티브 `.exe` 경로를 사용하세요. npm으로 설치한 Codex는 `node_modules/@openai/codex/bin/codex.js`의 실제 전체 경로도 지원합니다. 이 파일에는 실행 경로만 지정하고 토큰·API 키 등 인증정보는 저장하지 마세요.\n\n환경변수로 경로를 지정할 수도 있습니다. 값에는 위와 같은 실제 실행 파일 경로를 넣으세요.\n- Codex: `AGENT_BRIDGE_CODEX_CLI`\n- Claude: `AGENT_BRIDGE_CLAUDE_CLI`\n- Gemini(Antigravity `agy`): `AGENT_BRIDGE_GEMINI_CLI`\n\n경로를 지정한 뒤 `doctor`를 다시 실행해 확인하세요. 실제 인증과 모델 응답은 `Check Connections.cmd`로 점검하세요.\n\n## 3. 대시보드와 실행기 시작\n현재 대시보드에서 작업을 등록하려면 Git 설치와 Git 저장소 경로가 필요합니다. 아래 예시 경로를 실제 Git 저장소 폴더로 바꿔 실행하세요.\n```powershell\n.\\agent-bridge.cmd serve --repo \"C:\\work\\project\"\n```\n표시된 `http://127.0.0.1` 주소를 브라우저에서 열고, 작업을 제출한 뒤 **실행기 시작** 버튼을 누릅니다. `Start Dashboard.cmd`를 더블클릭해 대시보드를 열 수도 있습니다.\n\n기본은 읽기 전용입니다. 파일 쓰기가 필요한 경우 실행 명령에 `--allow-write`를 추가하세요.\n```powershell\n.\\agent-bridge.cmd serve --repo \"C:\\work\\project\" --allow-write\n```\n\n## 4. CLI로 작업 전달\nCodex↔Gemini, Claude↔Gemini, Codex↔Claude 간 양방향 전달을 지원합니다. 실제 작업을 실행할 수신 에이전트는 대상 PC에 설치되어 있어야 합니다.\n\nGit 저장소가 아닌 일반 폴더의 작업도 아래 CLI 명령으로 제출할 수 있습니다. Git 관련 기능을 사용하지 않는 작업에는 Git 설치가 필요하지 않습니다.\n\n다음 내용을 배포판 폴더의 `task.json`으로 저장하세요. `cwd`는 실제 작업 폴더로, `recipient`는 설치된 에이전트 ID로 바꿉니다. 지원 ID는 `codex`, `claude-code`, `gemini`입니다.\n\n`sender`와 `recipient`는 서로 달라야 합니다. `sender`를 바꾸면 아래 수신·ACK 명령의 `--as` 값도 같은 ID로 바꾸세요.\n```json\n{\n  \"message_id\": \"hello-1\",\n  \"task_id\": \"hello\",\n  \"sender\": \"codex\",\n  \"recipient\": \"gemini\",\n  \"cwd\": \"C:/work/project\",\n  \"goal\": \"이 폴더를 읽고 짧게 요약해 줘\",\n  \"acceptance\": [\"파일을 수정하지 않고 근거와 함께 요약\"],\n  \"sandbox\": \"read-only\",\n  \"write_files\": [],\n  \"file_refs\": []\n}\n```\n작업을 보내고 한 번 실행한 뒤 결과를 받습니다.\n```powershell\n.\\agent-bridge.cmd send .\\task.json\n.\\agent-bridge.cmd run --once\n.\\agent-bridge.cmd receive --as codex\n```\n\n## 5. 결과 수신 확인(ACK)\n수신한 결과의 `message_id`를 확인하고, 아래 따옴표 안의 값을 해당 ID로 바꿔 실행하세요.\n```powershell\n.\\agent-bridge.cmd ack \"받은 message_id\" --as codex\n```\n\n## 6. 데이터 경로와 버전 교체\n기본 데이터 경로는 `%USERPROFILE%\\.agent-bridge\\bridge.db`입니다. 다른 DB를 쓰려면 `--db` 옵션이나 `AGENT_BRIDGE_DB` 환경변수로 경로를 지정하세요. 같은 큐를 사용할 명령들은 같은 DB 경로를 사용해야 합니다.\n\n새 버전은 기존 배포판을 덮어쓰지 말고 별도 폴더에 풀어 실행하세요. 기존 DB는 그대로 보존하고, 별도 DB 경로를 사용했다면 새 버전에도 같은 경로를 지정하세요.\n\n## 실행 조건\n- 에이전트는 1개만 설치해도 수동 작업을 실행하고 결과를 받을 수 있습니다. 이때 `sender`는 회신을 받을 논리적 ID이며, 해당 CLI가 설치되어 있다는 뜻은 아닙니다.\n- 설치된 에이전트가 0개면 대시보드·doctor·큐 조회는 가능하지만 AI 작업은 실행할 수 없습니다. 연결 점검도 실행할 수 있으나 실제 호출은 하지 않습니다.\n- 기본 검수 체인 `chain.review`에는 Codex와 Claude가 모두 필요합니다. 다른 에이전트로 자동 교체하지 않습니다.\n- 작업에 필요한 플러그인·보호 훅과 브라우저·Ego 실행 권한은 대상 PC에서도 준비해야 합니다. Artifact Writer 플러그인은 선택 사항입니다. 설치되어 있으면 Codex 문서 쓰기에 사용하고, 없으면 Codex가 작업 폴더 안에서 직접 씁니다. Bridge는 이를 제거하거나 권한을 변경하지 않습니다. Git 관련 기능에는 별도 Git 설치가 필요합니다. 현재 대시보드의 작업 등록에는 Git 설치와 Git 저장소 경로가 모두 필요하며, 일반 폴더 작업은 CLI로 제출할 수 있습니다. 연결 점검에는 Git이 필요하지 않습니다.\n- 큐는 대상 PC 안에서 공유됩니다. PC 간 네트워크 중계는 지원하지 않습니다.",
+  "agentUnavailable": "이 PC에서 사용할 수 없는 에이전트입니다.",
+  "reviewUnavailable": "기본 검수 체인에는 Codex와 Claude가 모두 필요합니다.",
+  "noAgents": "설치된 에이전트가 없습니다. doctor 명령으로 설치 경로를 확인하세요.",
+  "connectionCheck": {
+    "title": "Codex·Gemini 실제 연결 점검",
+    "usage": "Check Connections.cmd를 더블클릭하거나 PowerShell에서 .\\agent-bridge.cmd check-connections를 실행하세요.",
+    "note": "각 CLI 실제 호출에 사용량이 발생합니다. 고정된 토큰 상한이나 적은 입력 토큰을 보장하지 않습니다. CLI의 기본 지침과 필수 플러그인 문맥이 입력에 포함될 수 있어 출력이 짧아도 입력 토큰이 발생합니다. 공급자별 캐시 계산 방식이 달라 단순 합산하지 않습니다.",
+    "call": {
+      "passed": "실제 호출 성공",
+      "failed": "실제 호출 실패",
+      "skipped": "실제 호출 생략"
+    },
+    "authentication": {
+      "verified": "인증 확인됨",
+      "stored": "인증정보 저장됨 · 실제 호출 미확인",
+      "missing": "로그인 필요",
+      "not_verified": "인증 확인 안 됨"
+    },
+    "reasons": {
+      "not_installed": "CLI를 찾을 수 없습니다.",
+      "authentication": "로그인이 필요하거나 인증에 실패했습니다.",
+      "quota": "사용 한도에 도달했습니다.",
+      "permission": "필요한 권한이 없습니다.",
+      "timeout": "응답 대기 시간이 초과되었습니다.",
+      "call_failed": "CLI 호출에 실패했습니다.",
+      "unexpected_reply": "응답이 확인 문구와 일치하지 않습니다.",
+      "tool_attempt": "점검 중 도구 사용이 시도되었습니다.",
+      "cleanup_failed": "임시 폴더 정리에 실패했습니다.",
+      "cancelled": "점검이 취소되었습니다.",
+      "login_status_failed": "로그인 상태 확인에 실패했습니다.",
+      "configuration": "CLI 설정을 확인하세요."
+    }
+  }
+}

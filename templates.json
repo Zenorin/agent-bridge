@@ -1,0 +1,20 @@
+{
+  "image-photo": {
+    "sender": "claude-code",
+    "recipient": "codex",
+    "cwd": "{{work_dir}}",
+    "sandbox": "workspace-write",
+    "write_files": ["{{out}}"],
+    "file_refs": [],
+    "profile": "image",
+    "effort": "low",
+    "model": null,
+    "thread_id": null,
+    "goal": "image_gen.imagegen 도구로 이미지 1장을 생성해 {{out}} 로 저장한다. 프롬프트(고치지 말고 그대로 사용): \"hyper realistic {{prompt}}\"\n\n작업 방식: (1) 스킬 파일은 읽지 않고 도구를 바로 호출한다. (2) 생성 뒤 대기는 wait 1회, yield_time_ms 60000으로 한다. 짧은 wait·sleep 반복 폴링을 하지 않는다. (3) 파일을 복사하거나 PowerShell을 실행하지 않는다. 생성 도구가 알려 준 파일의 절대 경로(없으면 $CODEX_HOME/generated_images 아래 가장 최근 PNG)를 summary에 적고 status: done으로 끝낸다. {{out}} 로의 복사는 호출자가 한다. (4) 다른 파일·문서를 만들지 않는다. 생성 자체가 불가능하면 만든 척하지 말고 이유를 status: question으로 알린다. 회신 summary는 3줄 이내: 생성 파일 절대 경로, 해상도, 사용 도구.",
+    "acceptance": [
+      "생성 파일의 절대 경로가 summary에 있음",
+      "프롬프트의 구도·인물 수·로고·워터마크 없음 조건 충족",
+      "스킬 파일 읽기 없이 도구 호출 5회 이하"
+    ]
+  }
+}

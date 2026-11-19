@@ -1,0 +1,90 @@
+# agent-bridge
+
+[English](README.md)
+
+AI 코딩 도구끼리 일을 주고받게 해 주는 작은 로컬 작업함이에요.
+작업을 한 번 적고, **Claude Code**, **Codex**, **Antigravity**(Gemini) 중 누구에게 맡길지 고른 뒤, 결과를 한곳에서 받아요.
+
+> **상태: 초기 버전(0.1.0).** **Windows x64**에서만 확인했어요.
+>
+> agent-bridge는 개인이 만든 독립 프로젝트예요. Anthropic, OpenAI, Google과 관계가 없고 공식 도구가 아니에요.
+
+## 하는 일
+
+- 작업, 회신, 질문을 내 컴퓨터의 SQLite 작업함(`~/.agent-bridge/bridge.db`)에 기록해요.
+- 이미 설치하고 로그인한 CLI로 작업을 실행해요.
+  - Codex: `codex app-server`
+  - Claude Code: `claude -p`
+  - Gemini: 내 Google 계정으로 로그인한 Antigravity CLI(`agy`)
+- 작업마다 받는 도구, 모델, effort를 고를 수 있고, 단계를 이을 수 있어요(예: Codex가 쓰고 Claude가 검토).
+- 시도마다 토큰 사용량을 기록해요.
+- 원하면 브라우저 대시보드에서 작업을 등록하고 진행 상황을 볼 수 있어요.
+
+작업함 자체는 모델을 부르지 않아요. 실행기가 작업을 실행할 때만 사용량이 생겨요.
+
+## 설치 (Windows x64)
+
+1. [Releases](../../releases)에서 `agent-bridge-win-x64.zip`을 받아 아무 폴더에 풀어요. Node.js가 들어 있어서 따로 설치할 필요가 없어요.
+2. 쓸 AI CLI(Codex, Claude Code, Antigravity `agy`) 중 하나 이상을 직접 설치하고 로그인해요.
+3. `Self Test.cmd`를 실행해요. 모델을 부르지 않고 모의 에이전트로 설치 상태만 점검해요.
+4. 찾은 CLI를 확인해요.
+
+   ```powershell
+   .\agent-bridge.cmd doctor
+   ```
+
+5. 필요하면 설치된 도구마다 짧은 실제 호출을 한 번씩 해서 로그인 상태를 확인해요. 사용량이 조금 들어요.
+
+   ```powershell
+   .\agent-bridge.cmd check-connections
+   ```
+
+자세한 설치 안내는 압축 파일 안의 `QUICKSTART.ko.md`에 있어요.
+
+## 안전과 개인정보
+
+- **기본은 읽기 전용이에요.** 쓰기 작업은 실행기를 `--allow-write`로 켜고, 작업의 `write_files`에 고칠 파일을 적어야만 실행돼요. 목록 밖 파일이 바뀐 것을 발견하면 작업을 `blocked`로 멈추고 확인을 기다려요. 미리 막는 장치가 아니라 사후 감지라서, 이미 바뀐 내용을 되돌리지는 않아요.
+- **모든 것이 내 컴퓨터 안에서 돌아요.** 사용 통계를 보내지 않고, 자체 서버로 아무것도 보내지 않아요. 모델 호출은 직접 설치한 공식 CLI를 거쳐요.
+- **대시보드는 `127.0.0.1`에서만 열리고**, 접속 출처와 세션 토큰을 확인해요.
+- **인증정보를 저장하지 않아요.** 로그인은 각 CLI가 관리해요.
+- **설정 변경 감시.** 작업 전후로 AI 도구 설정 파일의 **해시값만** 비교해서 예상치 못한 변경을 잡아내요. 파일 내용은 밖으로 보내지 않아요.
+- 연결된 AI 도구는 작업 폴더의 파일을 읽을 수 있고, 허용하면 고칠 수도 있어요. 작업 폴더는 신중하게 골라 주세요.
+
+## 알려진 제한
+
+- Windows x64 전용이에요. macOS와 Linux는 확인하지 않았어요.
+- 기본값으로 필수인 플러그인은 없어요. `profiles.json`의 `required_plugins`에 적은 플러그인은 모든 프로필에서 켜진 채로 유지돼요.
+- Artifact Writer는 선택 사항이에요. 설치돼 있으면 Codex가 문서 파일(`.md`, `.html`, `.json` 등)을 쓸 때 사용하고, 없으면 작업 폴더 안에 직접 써요.
+- `profiles.json`과 `image-job.mjs`의 기본 모델 이름은 시간이 지나면 바뀔 수 있어요. 쓸 수 있는 모델로 바꿔 주세요.
+- 대시보드에서 작업을 등록하려면 Git과 Git 저장소가 필요해요. 일반 폴더 작업은 CLI로 보낼 수 있어요.
+- 기본 검토 체인(`chain.review`)에는 Codex와 Claude Code가 모두 필요해요.
+- 작업함은 한 컴퓨터 안에서만 공유돼요.
+
+## 소스에서 실행
+
+Node.js 22.13 이상이 필요해요. npm 패키지는 쓰지 않아요.
+
+```powershell
+node portable.mjs doctor
+npm test
+```
+
+배포용 zip 만들기 (Windows x64, 출력 폴더는 아직 없어야 해요):
+
+```powershell
+npm run build:release -- release
+```
+
+## 문서
+
+- [docs/reference.ko.md](docs/reference.ko.md): 전체 명령과 옵션
+- [docs/common-contract.ko.md](docs/common-contract.ko.md): 공통 작업 계약
+- [docs/efficiency.ko.md](docs/efficiency.ko.md): 사용량 기록과 비용 메모
+
+## 후원
+
+agent-bridge는 무료 오픈소스예요. 도움이 됐다면 [talkak.shop](https://talkak.shop)에서 응원해 주세요.
+
+## 라이선스
+
+[MIT](LICENSE)
