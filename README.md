@@ -5,7 +5,7 @@
 A small local task queue that lets AI coding tools hand work to each other.
 You write a task once, choose who should do it — **Claude Code**, **Codex** or **Antigravity** (Gemini) — and collect the result in the same place.
 
-> **Status: early release (0.2.0).** Tested on **Windows x64** only. Most CLI messages and the detailed docs are in Korean for now.
+> **Status: early release (0.3.0).** Tested on **Windows x64** only. Most CLI messages and the detailed docs are in Korean for now.
 >
 > agent-bridge is an independent project. It is not affiliated with or endorsed by Anthropic, OpenAI or Google.
 
