@@ -19,7 +19,7 @@ export function buildRelease(source,output,{node=process.execPath}={}) {
  mkdirSync(root,{recursive:true});mkdirSync(path.join(root,'app'));mkdirSync(path.join(root,'runtime'));
  const modules=readdirSync(source).filter(file=>file.endsWith('.mjs')&&file!=='build-release.mjs');
  const files=[...modules,'profiles.json','templates.json','distribution-text.ko.json',
-  ...['app.js','index.html','style.css','copy.ko.json'].map(file=>'ui/'+file),'programs/check-files.mjs',
+  ...['app.js','index.html','style.css','copy.ko.json'].map(file=>'ui/'+file),'programs/check-files.mjs','tray.ps1',
   '__tests__/portable.test.mjs','__tests__/connection-check.test.mjs','__tests__/fixtures/fake-app-server.mjs','__tests__/fixtures/fake-general-cli.mjs','__tests__/fixtures/fake-connection-cli.mjs','__tests__/fixtures/gemini-auth.mjs'];
  for(const file of files){
   const from=path.join(source,file),to=path.join(root,'app',file);
@@ -30,6 +30,8 @@ export function buildRelease(source,output,{node=process.execPath}={}) {
  if(existsSync(path.join(source,'LICENSE')))copyFileSync(path.join(source,'LICENSE'),path.join(root,'LICENSE.txt'));
  writeFileSync(path.join(root,'agent-bridge.cmd'),'@echo off\r\nsetlocal\r\n"%~dp0runtime\\node.exe" "%~dp0app\\portable.mjs" %*\r\n');
  writeFileSync(path.join(root,'Start Dashboard.cmd'),'@echo off\r\ncall "%~dp0agent-bridge.cmd" serve %*\r\nif errorlevel 1 pause\r\n');
+ // Starts the dashboard with the tray icon and no console window. The work folder is the user's home unless --repo is given.
+ writeFileSync(path.join(root,'Start Tray.cmd'),'@echo off\r\nsetlocal\r\nset "BRIDGE_HOME=%~dp0"\r\npowershell.exe -NoProfile -WindowStyle Hidden -Command "Start-Process -WindowStyle Hidden -FilePath \'%BRIDGE_HOME%runtime\\node.exe\' -ArgumentList \'\\"%BRIDGE_HOME%app\\portable.mjs\\"\',\'serve\',\'--tray\' -WorkingDirectory $env:USERPROFILE"\r\n');
  writeFileSync(path.join(root,'Self Test.cmd'),'@echo off\r\n"%~dp0runtime\\node.exe" --test "%~dp0app\\__tests__\\portable.test.mjs" "%~dp0app\\__tests__\\connection-check.test.mjs"\r\npause\r\n');
  writeFileSync(path.join(root,'Check Connections.cmd'),'@echo off\r\nsetlocal\r\ncall "%~dp0agent-bridge.cmd" check-connections\r\nset "BRIDGE_CHECK_EXIT=%ERRORLEVEL%"\r\npause\r\nexit /b %BRIDGE_CHECK_EXIT%\r\n');
  const text=JSON.parse(readFileSync(path.join(source,'distribution-text.ko.json'),'utf8'));

@@ -44,7 +44,8 @@ AI 코딩 도구끼리 일을 주고받게 해 주는 작은 로컬 작업함이
    .\agent-bridge.cmd doctor
    ```
 
-5. 필요하면 설치된 도구마다 짧은 실제 호출을 한 번씩 해서 로그인 상태를 확인해요. 사용량이 조금 들어요.
+5. **`Start Tray.cmd`**를 실행하면 작업 표시줄 오른쪽 아래에 아이콘이 생겨요. 오른쪽 클릭으로 대시보드·설정을 열고 실행기를 켜고 끌 수 있어요.
+6. 필요하면 설치된 도구마다 짧은 실제 호출을 한 번씩 해서 로그인 상태를 확인해요. 사용량이 조금 들어요.
 
    ```powershell
    .\agent-bridge.cmd check-connections
@@ -106,6 +107,7 @@ npm run build:release -- release
 
 ## 문서
 
+- [docs/guide.ko.md](docs/guide.ko.md): **사용 설명서** (예제와 문제 해결)
 - [docs/reference.ko.md](docs/reference.ko.md): 전체 명령과 옵션
 - [docs/common-contract.ko.md](docs/common-contract.ko.md): 공통 작업 계약
 - [docs/efficiency.ko.md](docs/efficiency.ko.md): 사용량 기록과 비용 메모

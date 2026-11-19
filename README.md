@@ -45,7 +45,8 @@ The queue itself never calls a model. Model usage only happens when a runner exe
    .\agent-bridge.cmd doctor
    ```
 
-5. Optional: make one short real call to each installed agent to confirm sign-in.
+5. Optional: run **`Start Tray.cmd`** to get a tray icon (bottom right of the taskbar) that opens the dashboard and starts or stops the runner.
+6. Optional: make one short real call to each installed agent to confirm sign-in.
    This uses a small amount of your usage quota.
 
    ```powershell
@@ -144,6 +145,7 @@ npm run build:release -- release
 
 ## Documentation
 
+- [docs/guide.ko.md](docs/guide.ko.md): how to use it, with examples and troubleshooting (Korean; English guide coming)
 - [docs/reference.ko.md](docs/reference.ko.md): full command and option reference (Korean)
 - [docs/common-contract.ko.md](docs/common-contract.ko.md): shared task contracts (Korean)
 - [docs/efficiency.ko.md](docs/efficiency.ko.md): usage records and cost notes (Korean)

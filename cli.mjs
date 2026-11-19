@@ -45,7 +45,7 @@ const USAGE = `사용법: agent-bridge <명령> [옵션]   (소스에서 실행:
   run-gemini [--once] [--gemini-cli path]  설정한 연결 방식(API 키 또는 개인 계정)으로 Gemini 실행기를 돌린다
   profiles                      프로필과 입출력 설정을 본다
   inspect-profile [--profile name]  모델 호출 없이 실제 훅·플러그인 적용을 확인한다
-  serve [--repo path] [--port n] [--workers n] [--allow-write]  로컬 작업 현황 화면을 연다
+  serve [--repo path] [--port n] [--workers n] [--allow-write] [--tray]  로컬 작업 현황 화면을 연다 (--tray: 오른쪽 아래 트레이 아이콘, Windows)
   worktrees [--repo path]        Git worktree를 조회한다
   worktree-create <name> [--repo path] [--base ref]  별도 작업 폴더를 만든다
   worktree-lock <path> [--repo path]  worktree를 잠근다
@@ -84,6 +84,7 @@ const OPTIONS = {
   changed: { type: "string" },
   once: { type: "boolean" },
   "allow-write": { type: "boolean" },
+  tray: { type: "boolean" },
   "allow-full-access": { type: "boolean" },
   lean: { type: "boolean" },
   profiles: { type: 'string' },
@@ -371,12 +372,22 @@ export async function main(argv, workerOptions = {}) {
         const port=Number(values.port ?? 0);
         if(!Number.isInteger(port)||port<0||port>65535) throw new Error('invalid port');
         const app=await startDashboard({store,repo,port,profilesPath,workers:Number(values.workers ?? 1),allowWrite:!!values['allow-write'],workerOptions});
-        print({url:app.url,allow_write:!!values['allow-write']});
-        await new Promise(resolve=>{
-          const stop=()=>{process.removeListener('SIGINT',stop);process.removeListener('SIGTERM',stop);resolve();};
+        let tray=null;
+        if(values.tray){
+          const {startTray}=await import('./tray.mjs');
+          try{tray=startTray(app.url);}catch(error){await app.close();throw error;}
+        }
+        print({url:app.url,allow_write:!!values['allow-write'],tray:!!tray});
+        const trayCode=await new Promise(resolve=>{
+          const stop=()=>{process.removeListener('SIGINT',stop);process.removeListener('SIGTERM',stop);resolve(null);};
           process.once('SIGINT',stop);process.once('SIGTERM',stop);
+          tray?.exited.then(resolve);
         });
-        await app.close(); return 0;
+        tray?.close();
+        await app.close();
+        // Code 3: a tray icon from another run already owns the notification area.
+        if(trayCode===3){console.error('agent-bridge 트레이 아이콘이 이미 실행 중이에요. 오른쪽 아래 아이콘을 확인하세요.');return 3;}
+        return 0;
       }
       case 'worktrees': print(listWorktrees(repo)); return 0;
       case 'worktree-create': print(createWorktree(repo,{name:arg,base:values.base ?? 'HEAD'})); return 0;

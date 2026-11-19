@@ -264,4 +264,6 @@ try {
   $('repo-path').textContent=repo;renderProfiles();renderState();
   document.querySelector('[data-tab="tasks"]').setAttribute('aria-current','true');
   await refresh();setInterval(()=>{if(!document.hidden) void refresh();},3000);
+  // The tray icon opens the dashboard with #settings to land on the Settings tab.
+  if(location.hash==='#settings') document.querySelector('[data-tab="settings"]').click();
 } catch(e) {notice(`${t('loadError')} ${e.message}`,true);}
