@@ -1,5 +1,7 @@
 # agent-bridge 사용 설명서
 
+[English](guide.md)
+
 처음 쓰는 분을 위한 안내예요. 명령과 옵션의 전체 목록은 [reference.ko.md](reference.ko.md)에 있어요.
 
 ## 1. agent-bridge가 하는 일

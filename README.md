@@ -145,7 +145,7 @@ npm run build:release -- release
 
 ## Documentation
 
-- [docs/guide.ko.md](docs/guide.ko.md): how to use it, with examples and troubleshooting (Korean; English guide coming)
+- [docs/guide.md](docs/guide.md): how to use it, with examples and troubleshooting ([Korean version](docs/guide.ko.md))
 - [docs/reference.ko.md](docs/reference.ko.md): full command and option reference (Korean)
 - [docs/common-contract.ko.md](docs/common-contract.ko.md): shared task contracts (Korean)
 - [docs/efficiency.ko.md](docs/efficiency.ko.md): usage records and cost notes (Korean)

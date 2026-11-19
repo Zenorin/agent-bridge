@@ -107,7 +107,7 @@ npm run build:release -- release
 
 ## 문서
 
-- [docs/guide.ko.md](docs/guide.ko.md): **사용 설명서** (예제와 문제 해결)
+- [docs/guide.ko.md](docs/guide.ko.md): **사용 설명서** (예제와 문제 해결). 영어판은 [docs/guide.md](docs/guide.md)
 - [docs/reference.ko.md](docs/reference.ko.md): 전체 명령과 옵션
 - [docs/common-contract.ko.md](docs/common-contract.ko.md): 공통 작업 계약
 - [docs/efficiency.ko.md](docs/efficiency.ko.md): 사용량 기록과 비용 메모
