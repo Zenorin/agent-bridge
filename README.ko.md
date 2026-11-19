@@ -9,6 +9,8 @@ AI 코딩 도구끼리 일을 주고받게 해 주는 작은 로컬 작업함이
 >
 > agent-bridge는 개인이 만든 독립 프로젝트예요. Anthropic, OpenAI, Google과 관계가 없고 공식 도구가 아니에요.
 
+> **Gemini를 쓰실 분은 꼭 읽어 주세요.** 0.1.0은 개인 Google 계정으로 로그인한 Antigravity CLI를 실행해요. 이 방식은 Google 약관 위반이 될 수 있어요. [Antigravity FAQ](https://antigravity.google/docs/faq/)는 다른 프로그램이 Antigravity 로그인을 이용하는 것을 금지하고, 계정이 정지될 수 있다고 안내해요. Gemini API 키 방식을 고를 수 있는 버전을 준비하고 있어요. 그 전까지는 Gemini 실행기를 쓰지 않거나, 위험을 직접 감수하고 써 주세요.
+
 ## 하는 일
 
 - 작업, 회신, 질문을 내 컴퓨터의 SQLite 작업함(`~/.agent-bridge/bridge.db`)에 기록해요.

@@ -9,6 +9,8 @@ You write a task once, choose who should do it — **Claude Code**, **Codex** or
 >
 > agent-bridge is an independent project. It is not affiliated with or endorsed by Anthropic, OpenAI or Google.
 
+> **Gemini users, please read.** Version 0.1.0 runs the Antigravity CLI with your personal Google account, and this may violate Google's terms. The [Antigravity FAQ](https://antigravity.google/docs/faq/) says using third-party tools with an Antigravity login is not allowed and can lead to account suspension. A version that lets you choose a Gemini API key instead is in progress. Until then, skip the Gemini runner or use it at your own risk.
+
 ## What it does
 
 - Keeps tasks, replies and questions in a local SQLite queue (`~/.agent-bridge/bridge.db`).
