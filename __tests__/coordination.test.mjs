@@ -9,6 +9,7 @@ import {fileURLToPath} from 'node:url';
 import {fixtureLog} from './fixtures/fixture-log.mjs';
 import {inspectContract,wirePacket,verifyWire,receiptFor} from '../contracts.mjs';
 import {runAgentTask} from '../runner-core.mjs';
+import {GEMINI_TEST_AUTH} from './fixtures/gemini-auth.mjs';
 
 function setup(t){
  const cwd=mkdtempSync(path.join(os.tmpdir(),'bridge-coordinate-')),store=new BridgeStore(':memory:');
@@ -93,7 +94,7 @@ test('native worker dispatch executes only the leader and returns a zero-call sh
  store.sendTask(task('first',{acceptance:[]}));store.sendTask(task('second',{acceptance:[],sender:'codex',recipient:'gemini'}));
  await runBridgeWorkers(store,{once:true,agents:['codex','gemini'],
   codex:{command:process.execPath,args:[fileURLToPath(new URL('./fixtures/fake-app-server.mjs',import.meta.url))],env:{FAKE_LOG:codexLog}},
-  gemini:{command:process.execPath,args:[fileURLToPath(new URL('./fixtures/fake-general-cli.mjs',import.meta.url))],env:{FAKE_GENERAL_LOG:geminiLog}}});
+  gemini:{geminiAuth:GEMINI_TEST_AUTH,command:process.execPath,args:[fileURLToPath(new URL('./fixtures/fake-general-cli.mjs',import.meta.url))],env:{FAKE_GENERAL_LOG:geminiLog}}});
  assert.equal(store.get('first').status,'ready');assert.equal(store.get('second').status,'ready');assert.equal(existsSync(geminiLog),false);
  assert.equal(store.listUsage('first')[0].calls.model_calls,1);assert.equal(store.listUsage('second')[0].calls.model_calls,0);
  assert.equal(store.get('second:attempt:1:result').body.delivery.coalesced_from.message_id,'first');

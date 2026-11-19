@@ -138,6 +138,8 @@ export function normaliseTask(input) {
   requireOneOf(task.sender, AGENTS, "sender");
   requireOneOf(task.recipient, AGENTS, "recipient");
   if (task.sender === task.recipient) throw new Error("sender and recipient must differ");
+  // Optional per-task Gemini sign-in choice; used only when the settings allow both methods.
+  if (task.gemini_auth != null) requireOneOf(task.gemini_auth, ["api-key", "account"], "gemini_auth");
   task.sandbox = task.sandbox ?? "read-only";
   requireOneOf(task.sandbox, SANDBOXES, "sandbox");
   if (task.sandbox === "danger-full-access" && task.recipient !== "codex") {

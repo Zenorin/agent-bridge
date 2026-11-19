@@ -42,7 +42,7 @@ const USAGE = `사용법: agent-bridge <명령> [옵션]   (소스에서 실행:
                                 Codex 실행기를 돌린다
   run [--once] [--workers n] [--allow-write]  Codex·Claude 실행기를 함께 돌린다
   run-claude [--once] [--allow-write]  Claude 일반 작업·검토 실행기를 돌린다
-  run-gemini [--once] [--gemini-cli path]  Google 계정의 Antigravity CLI로 Gemini 실행기를 돌린다
+  run-gemini [--once] [--gemini-cli path]  설정한 연결 방식(API 키 또는 개인 계정)으로 Gemini 실행기를 돌린다
   profiles                      프로필과 입출력 설정을 본다
   inspect-profile [--profile name]  모델 호출 없이 실제 훅·플러그인 적용을 확인한다
   serve [--repo path] [--port n] [--workers n] [--allow-write]  로컬 작업 현황 화면을 연다
@@ -57,7 +57,14 @@ agent: ${AGENTS.join(", ")}
 send 옵션: --workflow <외부 JSON> --workflow-role <역할 이름>
 공통 계약: send/send-plan --contract <외부 계약 JSON> 또는 봉투/계획의 contract 필드
 회신 후속 작업: send task.json --reply-to <reply_id> [--followup-key <단계 이름>]
-Gemini 경로: --gemini-cli <agy 실행 파일> 또는 ~/.agent-bridge/clients.json의 gemini.executable`;
+Gemini 경로: --gemini-cli <agy 실행 파일> 또는 ~/.agent-bridge/clients.json의 gemini.executable
+
+설정 (agent-bridge.cmd 또는 node portable.mjs로 실행)
+  settings                      사용할 AI와 Gemini 연결 방식을 본다
+  settings --enable a,b --disable c  AI를 켜거나 끈다 (codex, claude-code, gemini)
+  settings --gemini-auth api-key|account|both [--gemini-default api-key|account] [--accept-account-risk]
+                                Gemini 연결 방식을 고른다. 개인 계정 방식은 약관 위반이 될 수 있어 동의가 필요하다
+  작업마다 바꾸기: 봉투에 "gemini_auth": "api-key" 또는 "account" (설정이 both일 때)`;
 
 const OPTIONS = {
   db: { type: "string" },

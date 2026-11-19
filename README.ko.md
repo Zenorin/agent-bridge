@@ -9,7 +9,7 @@ AI 코딩 도구끼리 일을 주고받게 해 주는 작은 로컬 작업함이
 >
 > agent-bridge는 개인이 만든 독립 프로젝트예요. Anthropic, OpenAI, Google과 관계가 없고 공식 도구가 아니에요.
 
-> **Gemini를 쓰실 분은 꼭 읽어 주세요.** 0.1.0은 개인 Google 계정으로 로그인한 Antigravity CLI를 실행해요. 이 방식은 Google 약관 위반이 될 수 있어요. [Antigravity FAQ](https://antigravity.google/docs/faq/)는 다른 프로그램이 Antigravity 로그인을 이용하는 것을 금지하고, 계정이 정지될 수 있다고 안내해요. Gemini API 키 방식을 고를 수 있는 버전을 준비하고 있어요. 그 전까지는 Gemini 실행기를 쓰지 않거나, 위험을 직접 감수하고 써 주세요.
+> **Gemini를 쓰실 분은 꼭 읽어 주세요.** 개인 Google 계정으로 Gemini를 연결하면 Google 약관 위반이 될 수 있어요. [Antigravity FAQ](https://antigravity.google/docs/faq/)는 다른 프로그램이 Antigravity 로그인을 이용하는 것을 금지하고, 계정이 정지될 수 있다고 안내해요. 다음 버전부터는 Gemini API 키 방식(권장)을 고를 수 있고, 개인 계정 방식은 위험 안내에 동의해야 쓸 수 있어요. 0.1.0은 개인 계정 방식만 지원해요.
 
 ## 하는 일
 
@@ -17,7 +17,8 @@ AI 코딩 도구끼리 일을 주고받게 해 주는 작은 로컬 작업함이
 - 이미 설치하고 로그인한 CLI로 작업을 실행해요.
   - Codex: `codex app-server`
   - Claude Code: `claude -p`
-  - Gemini: 내 Google 계정으로 로그인한 Antigravity CLI(`agy`)
+  - Gemini: Antigravity CLI(`agy`). Gemini API 키와 개인 Google 계정 중 직접 고른 방식으로 연결해요
+- 쓸 AI를 직접 골라요. 켜 둔 AI끼리만 작업을 주고받아요.
 - 작업마다 받는 도구, 모델, effort를 고를 수 있고, 단계를 이을 수 있어요(예: Codex가 쓰고 Claude가 검토).
 - 시도마다 토큰 사용량을 기록해요.
 - 원하면 브라우저 대시보드에서 작업을 등록하고 진행 상황을 볼 수 있어요.
@@ -50,6 +51,24 @@ AI 코딩 도구끼리 일을 주고받게 해 주는 작은 로컬 작업함이
    ```
 
 자세한 설치 안내는 압축 파일 안의 `QUICKSTART.ko.md`에 있어요.
+
+## 설정: 쓸 AI와 Gemini 연결 방식
+
+대시보드의 **설정** 탭이나 `settings` 명령으로 바꿔요. 실행 중인 실행기는 중단했다가 다시 시작하면 바뀐 설정이 적용돼요.
+
+```powershell
+.\agent-bridge.cmd settings                              # 현재 설정 보기
+.\agent-bridge.cmd settings --disable claude-code        # AI 끄기
+.\agent-bridge.cmd settings --gemini-auth api-key        # Gemini를 API 키로 연결 (권장)
+```
+
+Gemini는 연결 방식을 고르기 전에는 작업을 받지 않아요.
+
+- **`api-key` (권장)**: [Google AI Studio](https://aistudio.google.com/apikey)에서 키를 만들어 사용자 환경변수 `GEMINI_API_KEY`에 넣어요. 쓴 만큼 Google에 따로 요금이 나갈 수 있어요. agent-bridge는 키를 저장하거나 화면에 보여 주지 않아요.
+- **`account`**: `agy`에 로그인한 내 Google 계정을 써요. **Google 약관 위반이 될 수 있고** 계정이 정지될 수 있어요(위 FAQ 참고). `--accept-account-risk`나 대시보드의 동의 체크로 위험을 직접 감수한다고 확인해야 고를 수 있어요.
+- **`both`**: 두 방식을 모두 허용해요. 평소에는 `--gemini-default`로 정한 방식을 쓰고, 작업에 `"gemini_auth": "api-key"` 또는 `"account"`를 적으면 그 작업만 바꿔요.
+
+AI 도구 로그인은 모두 직접 해요. agent-bridge는 대신 로그인하지 않고, 각 서비스의 약관을 지킬 책임은 사용하는 분께 있어요.
 
 ## 안전과 개인정보
 

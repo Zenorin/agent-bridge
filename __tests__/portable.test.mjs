@@ -8,6 +8,7 @@ import {spawnSync} from 'node:child_process';
 import {discoverClients} from '../clients.mjs';
 import {BridgeStore,AGENTS} from '../store.mjs';
 import {runBridgeWorkers} from '../claude-runner.mjs';
+import {GEMINI_TEST_AUTH} from './fixtures/gemini-auth.mjs';
 
 function temp(t){const dir=mkdtempSync(path.join(os.tmpdir(),'bridge-portable-'));t.after(()=>rmSync(dir,{recursive:true,force:true}));return dir;}
 test('without Git, plain folders retain write-scope checks and Git repositories remain blocked',t=>{
@@ -50,7 +51,7 @@ for(let bits=1;bits<8;bits++)test(`only installed workers run and every installe
  const fixture=name=>fileURLToPath(new URL('./fixtures/'+name,import.meta.url));
  const missing={command:path.join(cwd,'not-installed.exe')};
  const codex=agents.includes('codex')?{command:process.execPath,args:[fixture('fake-app-server.mjs')]}:missing;
- const general={command:process.execPath,args:[fixture('fake-general-cli.mjs')]};
+ const general={geminiAuth:GEMINI_TEST_AUTH,command:process.execPath,args:[fixture('fake-general-cli.mjs')]};
  await runBridgeWorkers(store,{once:true,agents,codex,claude:agents.includes('claude-code')?general:missing,gemini:agents.includes('gemini')?general:missing});
  for(const id of ids){assert.equal(store.get(id).status,'ready',store.get(id).status_reason);}
  let replies=0;

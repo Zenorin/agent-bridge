@@ -158,15 +158,67 @@ function taskInput() {
   for(const [key,id] of [['model','task-model'],['effort','task-effort'],['thread_id','task-thread']]) if($(id).value) task[key]=$(id).value;
   return task;
 }
+// Settings: which agents take part and how Gemini signs in. Guide text comes from the server so the CLI shows the same words.
+let settings;
+const geminiChoice=()=>document.querySelector('input[name="gemini-auth"]:checked')?.value ?? null;
+function updateGeminiPanels() {
+  const mode=geminiChoice(),auth=settings.gemini_auth;
+  $('gemini-default-field').hidden=mode!=='both';
+  $('gemini-warning').hidden=!mode || mode==='api-key';
+  $('gemini-key-guide').hidden=!mode || mode==='account';
+  $('gemini-key-status').textContent=auth.api_key_present?settings.guide.keyPresent:settings.guide.keyMissing;
+  $('gemini-key-status').className=auth.api_key_present?'success':'';
+  $('gemini-key-steps').hidden=auth.api_key_present;
+}
+function choiceRow(type,name,value,checked,title,description,disabled=false) {
+  const label=el('label',null,type==='radio'?'choice':'toggle'),input=el('input'),text=el('span');
+  Object.assign(input,{type,name,value,checked,disabled});
+  text.append(el('strong',title),el('span',description,'muted'));
+  label.append(input,text);
+  return {label,input};
+}
+function renderSettings() {
+  const {agents,gemini_auth:auth,guide,help,links}=settings;
+  $('settings-agents-help').textContent=help.agents;
+  $('agent-toggles').replaceChildren(...Object.entries(agents).map(([agent,row])=>choiceRow('checkbox','agent',agent,row.installed&&row.enabled,agent,
+    !row.installed?t('agentNotInstalled'):row.enabled?t('agentOn'):t('agentOff'),!row.installed).label));
+  $('gemini-auth-title').textContent=guide.title;
+  $('gemini-auth-intro').textContent=guide.intro;
+  $('gemini-auth-error').hidden=!auth.error;
+  $('gemini-auth-error').textContent=auth.error ?? '';
+  $('gemini-auth-options').replaceChildren(...Object.entries(guide.options).map(([mode,option])=>{
+    const row=choiceRow('radio','gemini-auth',mode,auth.mode===mode,option.label,option.description);
+    row.input.addEventListener('change',updateGeminiPanels);
+    return row.label;
+  }));
+  $('gemini-default').replaceChildren(...['api-key','account'].map(mode=>{const o=el('option',guide.options[mode].label);o.value=mode;return o;}));
+  $('gemini-default').value=auth.default ?? 'api-key';
+  $('gemini-warning-text').textContent=guide.warning;
+  $('gemini-terms-link').textContent=guide.termsLink;
+  $('gemini-terms-link').href=links.gemini_terms;
+  $('gemini-accept-text').textContent=auth.account_risk_accepted?`${guide.accept} (${t('alreadyAccepted')})`:guide.accept;
+  $('gemini-accept').checked=auth.account_risk_accepted;
+  $('gemini-key-steps').replaceChildren(...guide.apiKeySteps.map(step=>el('li',step)));
+  updateGeminiPanels();
+}
+async function showSettings() {
+  try {settings=await api('/api/settings');}
+  catch(e) {
+    if(!e.message.startsWith('settings are')) throw e;
+    $('settings-form').hidden=true;$('settings-unavailable').hidden=false;$('settings-unavailable').textContent=t('settingsUnavailable');return;
+  }
+  $('settings-unavailable').hidden=true;$('settings-form').hidden=false;renderSettings();
+}
 for(const nav of document.querySelectorAll('[data-tab]')) action(nav,async()=>{
   activeTab=nav.dataset.tab;
   for(const n of document.querySelectorAll('[data-tab]')) n.setAttribute('aria-current',String(n===nav));
-  for(const name of ['tasks','worktrees','profiles']) $(`tab-${name}`).hidden=name!==activeTab;
+  for(const name of ['tasks','worktrees','profiles','settings']) $(`tab-${name}`).hidden=name!==activeTab;
   $('page-title').textContent=t(activeTab);
   if(activeTab==='worktrees') await showWorktrees();
+  if(activeTab==='settings') await showSettings();
   if(activeTab==='tasks') await refresh();
 });
-action($('refresh'),async()=>{await refresh(true);if(activeTab==='worktrees') await showWorktrees();});
+action($('refresh'),async()=>{await refresh(true);if(activeTab==='worktrees') await showWorktrees();if(activeTab==='settings') await showSettings();});
 action($('new-task'),()=>openTask());
 action($('close-task'),()=>$('task-dialog').close());
 action($('preview-task'),async()=>{const preview=await api('/api/preview',taskInput());$('packet-preview').textContent=json(preview);$('packet-preview').hidden=false;});
@@ -191,6 +243,18 @@ formAction('task-form',async()=>{
   $('task-dialog').close();$('task-form').reset();notice(t('taskSubmitted'));await refresh(true);
 });
 formAction('worktree-form',async()=>{await api('/api/worktrees',{name:$('worktree-name').value,base:$('worktree-base').value || 'HEAD'});notice(t('created'));await showWorktrees();});
+formAction('settings-form',async()=>{
+  const mode=geminiChoice();
+  const update={enabled:Object.fromEntries([...document.querySelectorAll('input[name="agent"]:not(:disabled)')].map(input=>[input.value,input.checked]))};
+  if(mode) {
+    const usesAccount=mode!=='api-key';
+    if(usesAccount && !$('gemini-accept').checked) throw new Error(t('geminiRiskRequired'));
+    update.gemini_auth={mode,...(mode==='both'?{default:$('gemini-default').value}:{}),accept_account_risk:usesAccount};
+  }
+  settings=await api('/api/settings',update);renderSettings();
+  notice(settings.runner_running?t('restartRunner'):settings.help.saved);
+  await refresh();
+});
 formAction('profiles-form',async()=>{
   profiles=await api('/api/profiles',{config:JSON.parse($('profiles-json').value),hash:profiles.hash});renderProfiles();notice(t('saved'));
 });

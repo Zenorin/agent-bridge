@@ -10,6 +10,7 @@ import { runAgentTask } from '../runner-core.mjs';
 import { runCodexWorker } from '../codex-runner.mjs';
 import { runGeminiWorker } from '../gemini-runner.mjs';
 import { fixtureLog } from './fixtures/fixture-log.mjs';
+import {GEMINI_TEST_AUTH} from './fixtures/gemini-auth.mjs';
 
 const NOW = Date.parse('2026-11-11T00:00:00.000Z');
 const at = ms => new Date(NOW + ms).toISOString();
@@ -203,7 +204,7 @@ test('a connector that cannot count tool calls is never retried', async t => {
 test('a Gemini usage-limit failure is handed to Codex only through the allowlist, keeping goal, scope and profile', async t => {
   const { store, recoveryFile, task } = setup(t);
   writeFileSync(recoveryFile, JSON.stringify({ fallback: [{ from: 'gemini', to: 'codex', on: ['quota'], profiles: ['light'], model: 'gpt-6-luna', effort: 'low' }] }));
-  const gemini = mode => ({ once: true, command: process.execPath, args: [FAKE_CLI], recoveryFile, env: { FAKE_GENERAL_MODE: mode } });
+  const gemini = mode => ({ once: true, geminiAuth: GEMINI_TEST_AUTH, command: process.execPath, args: [FAKE_CLI], recoveryFile, env: { FAKE_GENERAL_MODE: mode } });
   store.sendTask(task({ recipient: 'gemini', profile: 'light', acceptance: ['reply'], sandbox: 'workspace-write', write_files: ['a.txt'], model: 'gemini-x' }));
   await runGeminiWorker(store, { ...gemini('quota'), allowWrite: true });
   const row = store.get('m');

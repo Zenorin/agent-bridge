@@ -7,6 +7,7 @@ import {BridgeStore} from '../store.mjs';
 import {runAgentTask,runAgentWorker} from '../runner-core.mjs';
 import {buildPrompt,runCodexTask} from '../codex-runner.mjs';
 import {main} from '../cli.mjs';
+import {GEMINI_TEST_AUTH} from './fixtures/gemini-auth.mjs';
 
 function fixture(t){const cwd=mkdtempSync(path.join(os.tmpdir(),'bridge-efficiency-'));const store=new BridgeStore(':memory:');
  t.after(()=>{store.close();rmSync(cwd,{recursive:true,force:true});});
@@ -32,7 +33,7 @@ test('Claude and Gemini receive the same Ego efficiency advice through their rea
  const script=fileURLToPath(new URL('./fixtures/fake-general-cli.mjs',import.meta.url));
  for(const [recipient,run] of [['claude-code',runClaudeWorker],['gemini',runGeminiWorker]]){
   store.sendTask(task(recipient,{recipient,goal:'Verify ego-browser output',acceptance:[]}));
-  await run(store,{once:true,command:process.execPath,args:[script],env:{FAKE_GENERAL_LOG:log}});
+  await run(store,{once:true,geminiAuth:GEMINI_TEST_AUTH,command:process.execPath,args:[script],env:{FAKE_GENERAL_LOG:log}});
   assert.equal(store.get(recipient).status,'ready',store.get(recipient).status_reason);
  }
  const calls=readFileSync(log,'utf8').trim().split('\n').map(line=>JSON.parse(line));

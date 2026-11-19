@@ -9,6 +9,7 @@ import {syncBuiltinESMExports} from 'node:module';
 import {setTimeout as sleep} from 'node:timers/promises';
 import { BridgeStore, AGENTS } from '../store.mjs';
 import { buildClaudeArgs, runClaudeWorker } from '../claude-runner.mjs';
+import {GEMINI_TEST_AUTH} from './fixtures/gemini-auth.mjs';
 
 test('every distinct client pair can exchange and acknowledge results', () => {
   assert.ok(AGENTS.includes('gemini'));
@@ -39,7 +40,7 @@ for(const failedTree of [false,true])test(`general connector cancellation confir
   const store=new BridgeStore(':memory:');
   try{
     store.sendTask({message_id:'cancel',task_id:'cancel',sender:'codex',recipient:'gemini',goal:'wait',cwd:dir});
-    const running=runGeminiWorker(store,{once:true,command:process.execPath,args:[fileURLToPath(new URL('./fixtures/fake-general-cli.mjs',import.meta.url))],
+    const running=runGeminiWorker(store,{once:true,geminiAuth:GEMINI_TEST_AUTH,command:process.execPath,args:[fileURLToPath(new URL('./fixtures/fake-general-cli.mjs',import.meta.url))],
       cancelPollMs:10,env:{FAKE_GENERAL_MODE:'slow',FAKE_GENERAL_LOG:log}});
     for(let i=0;i<100;i++){try{readFileSync(log);break;}catch{await sleep(10);}}
     store.requestCancel('cancel');await running;
@@ -94,7 +95,7 @@ test('gemini counts model requests from finished agent_response steps and drops 
   try {
     for(const mode of ['steps','steps-unmeasured','pass']) {
       store.sendTask({message_id:mode,task_id:'calls',sender:'codex',recipient:'gemini',goal:'work',cwd:dir,sandbox:'read-only'});
-      await runGeminiWorker(store,{once:true,command:process.execPath,args,env:{FAKE_GENERAL_MODE:mode}});
+      await runGeminiWorker(store,{once:true,geminiAuth:GEMINI_TEST_AUTH,command:process.execPath,args,env:{FAKE_GENERAL_MODE:mode}});
       assert.equal(store.get(mode).status,'ready');
     }
     // The second request's prompt is its uncached input plus the cached part: 2271 + 10424.
@@ -114,12 +115,12 @@ for(const recipient of ['claude-code','gemini'])test(`${recipient} runs normal w
     for(const [i,mode] of ['pass','question','malformed','preamble',...(recipient==='gemini'?['native-canceled']:[])].entries()) {
       const message_id='task-'+i;
       store.sendTask({message_id,task_id:'general',sender:'codex',recipient,goal:'work',cwd:dir,sandbox:'read-only'});
-      await run(store,{once:true,command:process.execPath,args,env:{FAKE_GENERAL_MODE:mode,GEMINI_API_KEY:'must-not-use'}});
+      await run(store,{once:true,geminiAuth:GEMINI_TEST_AUTH,command:process.execPath,args,env:{FAKE_GENERAL_MODE:mode,GEMINI_API_KEY:'must-not-use'}});
       assert.equal(store.get(message_id).status,['pass','preamble'].includes(mode)?'ready':'blocked');
       if(mode==='question')assert.equal(store.get(message_id).status_reason,'question');
     }
     store.sendTask({message_id:'write',task_id:'general',sender:'codex',recipient,goal:'workspace-write a.txt',cwd:dir,sandbox:'workspace-write',write_files:['a.txt']});
-    await run(store,{once:true,allowWrite:true,command:process.execPath,args});
+    await run(store,{once:true,geminiAuth:GEMINI_TEST_AUTH,allowWrite:true,command:process.execPath,args});
     assert.equal(store.get('write').status,'ready');
     assert.equal(readFileSync(path.join(dir,'a.txt'),'utf8'),'written by fixture');
   }finally{store.close();rmSync(dir,{recursive:true,force:true});}

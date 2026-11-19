@@ -7,6 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {BridgeStore} from '../store.mjs';
 import {runGeminiWorker} from '../gemini-runner.mjs';
 import {classifyFailure} from '../failures.mjs';
+import {GEMINI_TEST_AUTH} from './fixtures/gemini-auth.mjs';
 
 const denial='permission check failed for read_file "C:/fixture/권한-시험.txt": Permission denied for read_file(C:/fixture/권한-시험.txt).\nMatches user-configured deny rule.';
 const fixture=fileURLToPath(new URL('./fixtures/fake-general-cli.mjs',import.meta.url));
@@ -15,7 +16,7 @@ for(const mode of ['denial-empty','denial-error','denial-exit','denial-text','de
   const cwd=mkdtempSync(path.join(os.tmpdir(),'bridge-permission-error-')),store=new BridgeStore(':memory:');
   t.after(()=>{store.close();rmSync(cwd,{recursive:true,force:true});});
   store.sendTask({message_id:mode,task_id:'permission-errors',sender:'codex',recipient:'gemini',goal:'Read the test fixture',cwd});
-  await runGeminiWorker(store,{once:true,command:process.execPath,args:[fixture],env:{FAKE_GENERAL_MODE:mode,FAKE_DENIAL_MESSAGE:denial}});
+  await runGeminiWorker(store,{once:true,geminiAuth:GEMINI_TEST_AUTH,command:process.execPath,args:[fixture],env:{FAKE_GENERAL_MODE:mode,FAKE_DENIAL_MESSAGE:denial}});
   const row=store.get(mode);
   if(mode==='denial-recovered'){
     assert.equal(row.status,'ready');

@@ -15,6 +15,7 @@
       <button type="button" class="nav-button" data-tab="tasks" aria-controls="tab-tasks">작업</button>
       <button type="button" class="nav-button" data-tab="worktrees" aria-controls="tab-worktrees">작업 폴더</button>
       <button type="button" class="nav-button" data-tab="profiles" aria-controls="tab-profiles">프로필</button>
+      <button type="button" class="nav-button" data-tab="settings" aria-controls="tab-settings">설정</button>
     </nav>
     <footer class="muted">로컬 전용</footer>
   </aside>
@@ -101,6 +102,42 @@
         </form>
       </details>
       <p class="muted">필드 필터는 등록한 로컬 도구 어댑터에만 적용됩니다. 외부 플러그인 내부의 데이터 전송은 제어하지 않습니다.</p>
+    </section>
+
+    <section id="tab-settings" class="panel" aria-labelledby="settings-heading" hidden>
+      <h2 id="settings-heading">설정</h2>
+      <p id="settings-unavailable" class="empty" hidden></p>
+      <form id="settings-form" hidden>
+        <fieldset class="settings-group">
+          <legend>사용할 AI</legend>
+          <p id="settings-agents-help" class="muted"></p>
+          <div id="agent-toggles" class="toggle-list"></div>
+        </fieldset>
+
+        <fieldset class="settings-group">
+          <legend id="gemini-auth-title">Gemini 연결 방식</legend>
+          <p id="gemini-auth-intro" class="muted"></p>
+          <p id="gemini-auth-error" class="error" hidden></p>
+          <div id="gemini-auth-options" class="choice-list"></div>
+          <div id="gemini-default-field" class="field narrow" hidden>
+            <label for="gemini-default">기본으로 쓸 방식</label>
+            <select id="gemini-default"></select>
+          </div>
+          <div id="gemini-warning" class="warning" hidden>
+            <p id="gemini-warning-text"></p>
+            <p><a id="gemini-terms-link" target="_blank" rel="noopener noreferrer"></a></p>
+            <label class="check"><input type="checkbox" id="gemini-accept" aria-labelledby="gemini-accept-text" aria-describedby="gemini-warning-text"> <span id="gemini-accept-text"></span></label>
+          </div>
+          <div id="gemini-key-guide" class="guide" hidden>
+            <p id="gemini-key-status"></p>
+            <ol id="gemini-key-steps"></ol>
+          </div>
+        </fieldset>
+
+        <div class="actions">
+          <button type="submit" class="primary">설정 저장</button>
+        </div>
+      </form>
     </section>
   </main>
 

@@ -5,7 +5,7 @@ import readline from 'node:readline';
 import os from 'node:os';
 import path from 'node:path';
 import {normalizeUsage} from './usage.mjs';
-import {googleAccountEnv} from './gemini-runner.mjs';
+import {GeminiAuthError,geminiModelProvider,geminiRunEnv,resolveGeminiAuth} from './gemini-auth.mjs';
 
 function failure(text) {
  if(/invalid model selection|conflicts with --effort|unknown model|model .*not found|unrecognized argument|unknown flag/i.test(text))return 'configuration';
@@ -55,7 +55,15 @@ export async function checkConnections(found,{env=process.env,timeoutMs=90_000,s
   for(const agent of ['codex','gemini']){
    const row=agents[agent]={installed:!!found.clients?.[agent]?.installed,authentication:'not_verified',call:'skipped',reason:null,probe_invocations:0,usage:null};
    if(!row.installed){row.reason='not_installed';continue;}
+   if(found.clients[agent].enabled===false){row.reason='disabled';continue;}
    if(signal?.aborted){row.reason='cancelled';continue;}
+   // Gemini is probed with the sign-in method chosen in settings; without a usable choice it is not called.
+   let geminiMode;
+   if(agent==='gemini'){
+    try{geminiMode=resolveGeminiAuth(found.clients.gemini.auth ?? null,{env});}
+    catch(e){if(!(e instanceof GeminiAuthError))throw e;row.reason='gemini_'+e.code;continue;}
+    row.auth_mode=geminiMode;
+   }
    const worker=found.workers[agent],prefix=agent==='codex'?(worker.args ?? []).filter((arg,i,all)=>i!==all.length-1||arg!=='app-server'):(worker.args ?? []);
    const command=worker.command ?? worker.cliPath;
    if(agent==='codex'){
@@ -85,11 +93,11 @@ export async function checkConnections(found,{env=process.env,timeoutMs=90_000,s
     let permissions;
     try{permissions=existsSync(settingsFile)?JSON.parse(readFileSync(settingsFile,'utf8').replace(/^\uFEFF/,'' )).permissions ?? {}:{};}catch{row.reason='configuration';continue;}
     if(typeof permissions!=='object'||Array.isArray(permissions)||!Array.isArray(permissions.deny ?? [])){row.reason='configuration';continue;}
-    const settings={modelProvider:'',permissions:{...permissions,deny:[...new Set([...(permissions.deny ?? []),'read_file(*)','write_file(*)','command(*)','mcp(*)','execute_url(*)'])]}};
+    const settings={modelProvider:geminiModelProvider(geminiMode),permissions:{...permissions,deny:[...new Set([...(permissions.deny ?? []),'read_file(*)','write_file(*)','command(*)','mcp(*)','execute_url(*)'])]}};
     args=[...prefix,'--print',prompt,'--output-format','stream-json','--json-schema',JSON.stringify(schema),'--disable-slash-commands','--settings',JSON.stringify(settings),...(model?['--model',model]:['--effort','low'])];
    }
    const started=Date.now();row.probe_invocations=1;
-   const result=await runCli(command,args,{cwd,env:agent==='gemini'?googleAccountEnv(env):env,input:agent==='codex'?prompt:'',timeoutMs,signal,onEvent});
+   const result=await runCli(command,args,{cwd,env:agent==='gemini'?geminiRunEnv(geminiMode,env):env,input:agent==='codex'?prompt:'',timeoutMs,signal,onEvent});
    row.elapsed_ms=Date.now()-started;row.exit_code=result.exitCode;
    if(usage){const normalized=normalizeUsage(agent,usage);row.usage={provider:normalized.provider,input_semantics:normalized.input_semantics,turn:normalized.turn};}
    let matched=false;try{matched=(typeof reply==='string'?JSON.parse(reply):reply)?.echo===nonce;}catch{}

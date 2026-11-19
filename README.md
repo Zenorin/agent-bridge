@@ -9,7 +9,7 @@ You write a task once, choose who should do it — **Claude Code**, **Codex** or
 >
 > agent-bridge is an independent project. It is not affiliated with or endorsed by Anthropic, OpenAI or Google.
 
-> **Gemini users, please read.** Version 0.1.0 runs the Antigravity CLI with your personal Google account, and this may violate Google's terms. The [Antigravity FAQ](https://antigravity.google/docs/faq/) says using third-party tools with an Antigravity login is not allowed and can lead to account suspension. A version that lets you choose a Gemini API key instead is in progress. Until then, skip the Gemini runner or use it at your own risk.
+> **Gemini users, please read.** Connecting Gemini with your personal Google account may violate Google's terms. The [Antigravity FAQ](https://antigravity.google/docs/faq/) says using third-party tools with an Antigravity login is not allowed and can lead to account suspension. The next version lets you choose a Gemini API key instead (recommended) and asks for your consent before the personal-account method can be used. Release 0.1.0 supports only the personal-account method.
 
 ## What it does
 
@@ -17,7 +17,8 @@ You write a task once, choose who should do it — **Claude Code**, **Codex** or
 - Runs each task with the CLI you already have installed and signed in to:
   - Codex through `codex app-server`
   - Claude Code through `claude -p`
-  - Gemini through the Antigravity CLI (`agy`) with your own Google account
+  - Gemini through the Antigravity CLI (`agy`), with a Gemini API key or your personal Google account, as you choose
+- Lets you choose which AIs take part. Only the AIs you switch on send and receive tasks.
 - Lets you choose the recipient, model and effort per task, and chain steps (for example: Codex writes, Claude reviews).
 - Records token usage per attempt so you can see where your budget went.
 - Opens an optional dashboard in your browser to submit tasks and watch progress.
@@ -52,6 +53,24 @@ The queue itself never calls a model. Model usage only happens when a runner exe
    ```
 
 If a CLI is not detected, set its path in `%USERPROFILE%\.agent-bridge\clients.json` or with `AGENT_BRIDGE_CODEX_CLI`, `AGENT_BRIDGE_CLAUDE_CLI`, `AGENT_BRIDGE_GEMINI_CLI`. Store only executable paths there, never tokens or API keys.
+
+## Settings: which AIs to use, and how Gemini signs in
+
+Open the **Settings** tab in the dashboard, or use the `settings` command. Changes apply to new runs; restart a running runner to pick them up.
+
+```powershell
+.\agent-bridge.cmd settings                              # show current settings
+.\agent-bridge.cmd settings --disable claude-code        # switch an AI off
+.\agent-bridge.cmd settings --gemini-auth api-key        # Gemini with an API key (recommended)
+```
+
+Gemini takes no tasks until you choose a sign-in method:
+
+- **`api-key` (recommended)**: create a key in [Google AI Studio](https://aistudio.google.com/apikey) and put it in the user environment variable `GEMINI_API_KEY`. Usage may be billed by Google. agent-bridge never stores or prints the key.
+- **`account`**: uses the Google account you signed in to `agy` with. **This may violate Google's terms** and can lead to account suspension (see the FAQ above). You must accept that risk with `--accept-account-risk` or the consent box in the dashboard.
+- **`both`**: allows either. Tasks use `--gemini-default` unless the task sets `"gemini_auth": "api-key"` or `"account"`.
+
+You sign in to every AI tool yourself. agent-bridge does not sign in for you, and following each provider's terms is your responsibility.
 
 ## Quick start
 

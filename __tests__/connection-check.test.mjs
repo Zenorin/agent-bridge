@@ -6,9 +6,10 @@ import path from 'node:path';
 import os from 'node:os';
 import {fileURLToPath} from 'node:url';
 import {checkConnections} from '../connection-check.mjs';
+import {GEMINI_TEST_AUTH} from './fixtures/gemini-auth.mjs';
 
 const fixture=fileURLToPath(new URL('./fixtures/fake-connection-cli.mjs',import.meta.url));
-const found={agents:['codex','gemini','claude-code'],clients:{codex:{installed:true},gemini:{installed:true,model:'gemini-4-argon-medium'},'claude-code':{installed:true}},workers:{codex:{command:process.execPath,args:[fixture,'app-server']},gemini:{command:process.execPath,args:[fixture]},claude:{command:'MUST_NOT_RUN'}}};
+const found={agents:['codex','gemini','claude-code'],clients:{codex:{installed:true},gemini:{installed:true,model:'gemini-4-argon-medium',auth:GEMINI_TEST_AUTH},'claude-code':{installed:true}},workers:{codex:{command:process.execPath,args:[fixture,'app-server']},gemini:{command:process.execPath,args:[fixture]},claude:{command:'MUST_NOT_RUN'}}};
 function setup(t,mode){const root=mkdtempSync(path.join(os.tmpdir(),'bridge-connection-test-'));t.after(()=>rmSync(root,{recursive:true,force:true}));return {root,log:path.join(root,'calls.jsonl'),env:{...process.env,CONNECTION_FIXTURE_MODE:mode,CONNECTION_FIXTURE_LOG:path.join(root,'calls.jsonl'),GEMINI_API_KEY:'test-secret'}};}
 test('one local auth check and one tiny probe per provider; Claude, API key and project context stay out',async t=>{
  const {env,log}=setup(t,'pass');const result=await checkConnections(found,{env});
@@ -38,7 +39,7 @@ test('Codex logged out skips its paid probe while Gemini is still checked',async
  assert.equal(result.agents.gemini.call,'passed');assert.equal(readFileSync(log,'utf8').trim().split('\n').length,2);
 });
 for(const mode of ['wrong','auth-failed','quota','model-conflict','tool','timeout'])test(`real-call failure stays distinct and is never retried: ${mode}`,async t=>{
- const {env,log}=setup(t,mode);const only={...found,agents:['gemini'],clients:{gemini:{installed:true}}};
+ const {env,log}=setup(t,mode);const only={...found,agents:['gemini'],clients:{gemini:{installed:true,auth:GEMINI_TEST_AUTH}}};
  const result=await checkConnections(only,{env,timeoutMs:mode==='timeout'?400:2000});
  assert.equal(result.ok,false);assert.equal(result.agents.gemini.call,'failed');
  assert.equal(result.agents.gemini.reason,{'wrong':'unexpected_reply','auth-failed':'authentication','quota':'quota','model-conflict':'configuration','tool':'tool_attempt','timeout':'timeout'}[mode]);

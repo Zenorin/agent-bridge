@@ -12,6 +12,7 @@ import {runAgentTask} from '../runner-core.mjs';
 import {prepareContext} from '../context.mjs';
 import {main} from '../cli.mjs';
 import {communicationPolicy,verifyCommunication,observePermissionDenial} from '../communication.mjs';
+import {GEMINI_TEST_AUTH} from './fixtures/gemini-auth.mjs';
 
 function setup(t){
  const home=mkdtempSync(path.join(os.tmpdir(),'bridge-communication-'));mkdirSync(path.join(home,'work'));
@@ -27,7 +28,7 @@ test('all six native AI directions deliver the same rules, preserve settings and
  for(const sender of AGENTS)for(const recipient of AGENTS){
   if(sender===recipient)continue;
   const id=sender+'-'+recipient;store.sendTask(task(id,{sender,recipient,browser_context:{space_id:7,page:'p1'}}));
-  await workers[recipient](store,{once:true,policyHome:home,command:process.execPath,args:[fixture(recipient==='codex'?'fake-app-server.mjs':'fake-general-cli.mjs')]});
+  await workers[recipient](store,{once:true,geminiAuth:GEMINI_TEST_AUTH,policyHome:home,command:process.execPath,args:[fixture(recipient==='codex'?'fake-app-server.mjs':'fake-general-cli.mjs')]});
   assert.equal(store.get(id).status,'ready',store.get(id).status_reason);
   const reply=store.takeReplies(sender).find(r=>r.reply_to===id);const proof=reply.body.communication_receipt;
   assert.equal(proof.delivery_verified,true);assert.equal(proof.settings_preserved,true);
@@ -62,7 +63,7 @@ test('configured Claude prompt hooks require an actual successful hook event',as
  writeFileSync(path.join(home,'.claude/settings.json'),JSON.stringify({hooks:{UserPromptSubmit:[{hooks:[{type:'command',command:'configured hook'}]}]}}));
  for(const mode of ['pass','no-hooks']){
   store.sendTask(task(mode,{recipient:'claude-code'}));
-  await runClaudeWorker(store,{once:true,policyHome:home,command:process.execPath,args:[fixture('fake-general-cli.mjs')],env:{FAKE_GENERAL_MODE:mode}});
+  await runClaudeWorker(store,{once:true,geminiAuth:GEMINI_TEST_AUTH,policyHome:home,command:process.execPath,args:[fixture('fake-general-cli.mjs')],env:{FAKE_GENERAL_MODE:mode}});
   assert.equal(store.get(mode).status,mode==='pass'?'ready':'blocked');
   if(mode==='no-hooks')assert.match(store.get(mode).status_reason,/required hook not observed/);
  }
@@ -77,7 +78,7 @@ test('permission diagnostics retain native classifier reasons without replacing 
 
 for(const recipient of ['claude-code','gemini'])test(`native denial reason survives ${recipient} parsing`,async t=>{
  const {home,store,task}=setup(t);store.sendTask(task(recipient,{recipient}));
- await (recipient==='gemini'?runGeminiWorker:runClaudeWorker)(store,{once:true,policyHome:home,command:process.execPath,args:[fixture('fake-general-cli.mjs')],env:{FAKE_GENERAL_MODE:'classifier-denial'}});
+ await (recipient==='gemini'?runGeminiWorker:runClaudeWorker)(store,{once:true,geminiAuth:GEMINI_TEST_AUTH,policyHome:home,command:process.execPath,args:[fixture('fake-general-cli.mjs')],env:{FAKE_GENERAL_MODE:'classifier-denial'}});
  assert.equal(store.get(recipient).status,'blocked');assert.match(store.get(recipient).status_reason,/Blocked by classifier/);
 });
 

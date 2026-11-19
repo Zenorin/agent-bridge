@@ -20,7 +20,7 @@ export function buildRelease(source,output,{node=process.execPath}={}) {
  const modules=readdirSync(source).filter(file=>file.endsWith('.mjs')&&file!=='build-release.mjs');
  const files=[...modules,'profiles.json','templates.json','distribution-text.ko.json',
   ...['app.js','index.html','style.css','copy.ko.json'].map(file=>'ui/'+file),'programs/check-files.mjs',
-  '__tests__/portable.test.mjs','__tests__/connection-check.test.mjs','__tests__/fixtures/fake-app-server.mjs','__tests__/fixtures/fake-general-cli.mjs','__tests__/fixtures/fake-connection-cli.mjs'];
+  '__tests__/portable.test.mjs','__tests__/connection-check.test.mjs','__tests__/fixtures/fake-app-server.mjs','__tests__/fixtures/fake-general-cli.mjs','__tests__/fixtures/fake-connection-cli.mjs','__tests__/fixtures/gemini-auth.mjs'];
  for(const file of files){
   const from=path.join(source,file),to=path.join(root,'app',file);
   if(!lstatSync(from).isFile()||lstatSync(from).isSymbolicLink())throw new Error('Release input must be a regular file: '+file);

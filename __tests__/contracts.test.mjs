@@ -16,6 +16,7 @@ import {fixtureLog} from './fixtures/fixture-log.mjs';
 import {runGeminiWorker} from '../gemini-runner.mjs';
 import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
+import {GEMINI_TEST_AUTH} from './fixtures/gemini-auth.mjs';
 
 function fixture(t){const cwd=mkdtempSync(path.join(os.tmpdir(),'bridge-contract-'));const store=new BridgeStore(':memory:');t.after(()=>{store.close();rmSync(cwd,{recursive:true,force:true});});
  writeFileSync(path.join(cwd,'facts.txt'),'SKU A-17; 0.35 kg\n');writeFileSync(path.join(cwd,'environment.txt'),'renderer-v1');
@@ -49,7 +50,7 @@ test('native adapters retain acknowledgements through execution, parse and deliv
  const {store,task}=fixture(t);
  for(const [recipient,run,fixture] of [['codex',runCodexWorker,'fake-app-server.mjs'],['claude-code',runClaudeWorker,'fake-general-cli.mjs'],['gemini',runGeminiWorker,'fake-general-cli.mjs']]){
   store.sendTask(task(recipient,{recipient,sender:recipient==='codex'?'gemini':'codex'}));
-  await run(store,{once:true,command:process.execPath,args:[fileURLToPath(new URL('./fixtures/'+fixture,import.meta.url))]});
+  await run(store,{once:true,geminiAuth:GEMINI_TEST_AUTH,command:process.execPath,args:[fileURLToPath(new URL('./fixtures/'+fixture,import.meta.url))]});
   const row=store.get(recipient);assert.equal(row.status,'ready',row.status_reason);
   const reply=store.takeReplies(row.sender).find(reply=>reply.reply_to===recipient);assert.equal(reply.body.contract_receipt.contract_hash,row.body.contract.hash);
   assert.ok(reply.body.delivery.contract_receipt);assert.equal(store.listRuntime(recipient)[0].contract_delivery.verified,true);

@@ -49,7 +49,8 @@ export function createCliConnector(claimed, options) {
     const command=options.command;
     if(!path.isAbsolute(command) || /\.(cmd|bat)$/i.test(command))throw new Error('CLI executable must be an absolute native path');
     const args=options.buildArgs(task,{args:options.args,sessionId});
-    receipt={agent:options.agent,auth:options.agent==='gemini'?'google-account':null,tool_log:[],hook_events:[],config_verified:false,...options.receipt};
+    receipt={agent:options.agent,auth:options.agent==='gemini'?'google-account':null,tool_log:[],hook_events:[],config_verified:false,
+      ...(typeof options.receipt==='function'?options.receipt():options.receipt)};
     store.saveRuntime(id,receipt,claimed);
     proc=spawn(command,args,{cwd:task.cwd,env:options.getEnv?.({...process.env,...options.env}) ?? {...process.env,...options.env},
       shell:false,windowsHide:true,detached:process.platform!=='win32',stdio:['pipe','pipe','pipe']});

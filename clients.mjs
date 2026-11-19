@@ -1,14 +1,15 @@
-import {existsSync,readFileSync,statSync} from 'node:fs';
+import {statSync} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {AGENTS} from './store.mjs';
+import {readClientsConfig} from './settings.mjs';
+import {normaliseGeminiAuth} from './gemini-auth.mjs';
 
 const file = value => {try{return statSync(value).isFile();}catch{return false;}};
 
 // Discovery checks local files only; login and protocol compatibility are verified when a task runs.
 export function discoverClients({home=os.homedir(),env=process.env,platform=process.platform,config}={}) {
- const settings=path.join(home,'.agent-bridge','clients.json');
- config ??= existsSync(settings)?JSON.parse(readFileSync(settings,'utf8').replace(/^\uFEFF/,'')):{};
+ config ??= readClientsConfig(home);
  if(!config || typeof config!=='object' || Array.isArray(config))throw new Error('clients.json must contain an object');
  const windows=platform==='win32',suffix=windows?'.exe':'',dirs=(env.PATH ?? env.Path ?? '').split(windows?';':':').filter(Boolean);
  const npmDirs=[...dirs,path.join(home,'AppData','Roaming','npm')];
@@ -26,12 +27,18 @@ export function discoverClients({home=os.homedir(),env=process.env,platform=proc
   if(executable && (typeof executable!=='string' || !path.isAbsolute(executable)))error='CLI executable must be an absolute path';
   else if(executable && windows && /\.(cmd|bat|ps1)$/i.test(executable))error='CLI executable must be native; for npm Codex select codex.js';
   else if(!executable || !file(executable))error='CLI executable not found';
-  clients[agent]={installed:!error,executable:executable ?? null,error,authentication:'not-checked',model:typeof config[agent]?.model==='string'?config[agent].model:null};
-  if(error)continue;
+  // An agent switched off in settings stays listed but takes no tasks.
+  const enabled=config[agent]?.enabled!==false;
+  clients[agent]={installed:!error,enabled,executable:executable ?? null,error,authentication:'not-checked',model:typeof config[agent]?.model==='string'?config[agent].model:null};
+  if(agent==='gemini'){
+   try{clients.gemini.auth=normaliseGeminiAuth(config.gemini?.auth ?? null);clients.gemini.auth_error=null;}
+   catch(e){clients.gemini.auth=null;clients.gemini.auth_error=e.message;}
+  }
+  if(error || !enabled)continue;
   if(agent==='codex')workers.codex=/\.[cm]?js$/i.test(executable)?{command:process.execPath,args:[executable,'app-server']}:{command:executable,args:['app-server']};
   else if(agent==='claude-code')workers.claude={command:executable};
-  else workers.gemini={cliPath:executable};
+  else workers.gemini={cliPath:executable,geminiAuth:clients.gemini.auth};
  }
- const agents=AGENTS.filter(agent=>clients[agent].installed);
+ const agents=AGENTS.filter(agent=>clients[agent].installed && clients[agent].enabled);
  return {agents,clients,workers,review_chain_available:agents.includes('codex')&&agents.includes('claude-code')};
 }

@@ -1,6 +1,6 @@
 # agent-bridge
 
-Claude Code·Codex·Gemini 세 수신자가 작업·결과·질문을 주고받는 로컬 작업함이다. SQLite에 메시지와 상태를 기록하고, Codex 작업은 `codex app-server`로, Claude 일반 업무와 읽기 전용 독립 검수는 `claude -p`로, Gemini 작업은 개인 Google 계정으로 로그인한 Antigravity CLI로 직접 실행한다. 브리지의 큐·조회 기능 자체는 모델을 호출하지 않는다.
+Claude Code·Codex·Gemini 세 수신자가 작업·결과·질문을 주고받는 로컬 작업함이다. SQLite에 메시지와 상태를 기록하고, Codex 작업은 `codex app-server`로, Claude 일반 업무와 읽기 전용 독립 검수는 `claude -p`로, Gemini 작업은 Antigravity CLI로 실행하며, 연결 방식(Gemini API 키 또는 개인 Google 계정)은 사용자가 설정에서 고른다. 브리지의 큐·조회 기능 자체는 모델을 호출하지 않는다.
 
 
 ## 요구 사항
@@ -8,7 +8,7 @@ Claude Code·Codex·Gemini 세 수신자가 작업·결과·질문을 주고받�
 - Node 22.5 이상 (`node:sqlite` 사용, 추가 의존성 없음)
 - Codex 실행기: `codex` CLI 설치와 로그인 (확인 버전 0.163.0)
 - Claude 실행기: `~/.local/bin/claude.exe` 네이티브 실행 파일과 로그인 (확인 버전 2.1.247)
-- Gemini 실행기: Antigravity CLI `agy` 설치와 개인 Google 계정 로그인 (검증 버전 1.5.0). 이 연결 경로는 API 키를 사용하지 않는다. 기존 Gemini CLI의 개인 계정 지원 종료는 [공식 안내](https://developers.google.com/gemini-code-assist/docs/deprecations/code-assist-individuals)를, 후속 CLI 설치와 시작 방법은 [Antigravity 문서](https://antigravity.google/docs/getting-started/)를 참고한다.
+- Gemini 실행기: Antigravity CLI `agy` 설치(검증 버전 1.5.0)와 연결 방식 선택. Gemini API 키(`GEMINI_API_KEY`)를 권장한다. 개인 Google 계정 방식은 Google 약관 위반이 될 수 있어 위험 안내에 동의해야 쓸 수 있다(아래 "Gemini 연결 방식 고르기"). 기존 Gemini CLI의 개인 계정 지원 종료는 [공식 안내](https://developers.google.com/gemini-code-assist/docs/deprecations/code-assist-individuals)를, 후속 CLI 설치와 시작 방법은 [Antigravity 문서](https://antigravity.google/docs/getting-started/)를 참고한다.
 - 필수 플러그인: 기본값에는 없다. 꼭 유지해야 하는 플러그인이 있으면 프로필 파일의 `required_plugins`에 적는다.
 - 선택: Artifact Writer(`artifact-writer@local-artifact-tools`). 설치돼 있으면 Codex 문서 쓰기에 사용하고, 없으면 Codex가 작업 폴더 안에서 직접 쓴다(아래 "문서 쓰기").
 
@@ -71,9 +71,37 @@ CLI 옵션 대신 작업 봉투 JSON에 `reply_to`, `followup_key`를 지정해�
 
 모든 회신이 자동으로 후속 업무를 만드는 것은 아니다. 이 중복 방지는 브리지를 통해 `reply_to`를 지정해 제출한 후속 업무에 적용되며, `reply_to` 없는 임의 외부 작업에는 적용되지 않는다.
 
-### Google 계정으로 Gemini 연결
+### 사용할 AI 고르기
 
-Antigravity CLI를 설치하고 개인 Google 계정으로 로그인한 뒤, `~/.agent-bridge/clients.json`에 실행 파일의 절대경로와 모델을 지정한다. API 키는 필요하지 않다.
+켜 둔 AI끼리만 작업을 주고받는다. 꺼 둔 AI는 목록에는 남지만 작업을 받지 않고, 그 AI에게 보내는 작업은 거부된다. 대시보드의 [설정] 탭이나 아래 명령으로 바꾼다. 설정은 `~/.agent-bridge/clients.json`에 저장되며, 키나 토큰은 저장하지 않는다.
+
+```bash
+agent-bridge settings                      # 현재 설정 보기
+agent-bridge settings --disable claude-code
+agent-bridge settings --enable claude-code,gemini
+```
+
+실행 중인 실행기는 중단했다가 다시 시작해야 바뀐 설정이 적용된다.
+
+### Gemini 연결 방식 고르기
+
+Gemini는 연결 방식을 고르기 전에는 작업을 받지 않는다. 방식은 세 가지다.
+
+- `api-key` (권장): Google AI Studio에서 만든 키를 사용자 환경변수 `GEMINI_API_KEY`에 넣는다. 실행할 때 `agy`에 `modelProvider: "gemini"` 설정을 넘기므로 사용자의 전역 `agy` 설정은 바꾸지 않는다. 사용량만큼 Google에 따로 과금될 수 있다.
+- `account`: `agy`에 로그인한 개인 Google 계정을 쓴다. **Google 약관 위반이 될 수 있다.** [Google Antigravity FAQ](https://antigravity.google/docs/faq/)는 다른 프로그램이 Antigravity 로그인을 이용하는 것을 금지하고, 계정이 정지되거나 해지될 수 있다고 안내한다. 그래서 위험 안내에 동의해야 고를 수 있고, 동의 시각이 설정에 기록된다.
+- `both`: 두 방식을 모두 허용한다. 평소에는 `--gemini-default`로 정한 방식을 쓰고, 작업 봉투의 `"gemini_auth": "api-key"` 또는 `"account"`로 작업마다 바꿀 수 있다.
+
+```bash
+agent-bridge settings --gemini-auth api-key
+agent-bridge settings --gemini-auth account --accept-account-risk
+agent-bridge settings --gemini-auth both --gemini-default api-key --accept-account-risk
+```
+
+키가 없거나, 고르지 않은 방식을 작업이 요청하거나, 동의 없이 개인 계정 방식을 쓰려 하면 해당 작업은 CLI를 실행하지 않고 이유와 함께 멈춘다. 실행 기록(`runtime[].auth`)에는 `gemini-api-key` 또는 `google-account`가 남는다.
+
+### Gemini 실행 파일 지정
+
+Antigravity CLI를 설치한 뒤, 자동으로 찾지 못하면 `~/.agent-bridge/clients.json`에 실행 파일의 절대경로와 모델을 지정한다.
 
 ```json
 {

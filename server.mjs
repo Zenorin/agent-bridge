@@ -16,7 +16,8 @@ const portableCopy=JSON.parse(readFileSync(new URL('./distribution-text.ko.json'
 export async function startDashboard({store,repo=process.cwd(),profilesPath=DEFAULT_PROFILES,port=0,allowWrite=false,workers=1,workerOptions={}}) {
   if(!Number.isSafeInteger(workers) || workers<1) throw new Error('workers must be a positive integer');
   const token=randomBytes(32).toString('hex');
-  const agents=workerOptions.agents ?? AGENTS;
+  // Settings changes made from the dashboard rediscover the agents, so these two can change while it runs.
+  let agents=workerOptions.agents ?? AGENTS;
   let origin,controller=null,running=null,runnerError=null;
   const send=(res,status,data)=>{res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store'});res.end(JSON.stringify(data));};
   const tasks=()=>store.db.prepare("SELECT message_id FROM messages WHERE kind='task' ORDER BY created_at DESC,rowid DESC").all().map(({message_id})=>store.get(message_id));
@@ -39,6 +40,10 @@ export async function startDashboard({store,repo=process.cwd(),profilesPath=DEFA
         if(route==='/api/bootstrap') return send(res,200,{token,repo,profiles:profileSummary(loadProfiles(profilesPath)),...state()});
         if(route==='/api/state') return send(res,200,state());
         if(route==='/api/worktrees') return send(res,200,{worktrees:listWorktrees(repo)});
+        if(route==='/api/settings') {
+          if(!workerOptions.settings) return send(res,404,{error:'settings are available when started with agent-bridge.cmd or portable.mjs'});
+          return send(res,200,{...workerOptions.settings.view(),guide:portableCopy.geminiAuth,help:portableCopy.settingsHelp,runner_running:!!controller});
+        }
         if(route.startsWith('/api/tasks/')) {
           const task=store.get(decodeURIComponent(route.slice('/api/tasks/'.length)));
           if(!task || task.kind!=='task') return send(res,404,{error:'task not found'});
@@ -78,6 +83,14 @@ export async function startDashboard({store,repo=process.cwd(),profilesPath=DEFA
         store.ackReplies(question.recipient,[question.message_id]); return send(res,200,out);
       }
       if(route==='/api/ack') {store.ackReplies(data.recipient,[data.message_id]);return send(res,200,{acknowledged:true});}
+      if(route==='/api/settings') {
+        if(!workerOptions.settings) return send(res,404,{error:'settings are not available'});
+        const {found,view}=workerOptions.settings.update(data);
+        // New tasks follow the new choice at once; a running runner picks it up after a restart.
+        agents=found.agents;
+        workerOptions={...workerOptions,...found.workers,agents:found.agents};
+        return send(res,200,{...view,guide:portableCopy.geminiAuth,help:portableCopy.settingsHelp,runner_running:!!controller});
+      }
       if(route==='/api/profiles') {
         // Adapter commands run local programs; they change only by editing the file, never through this API.
         if(JSON.stringify(data.config?.adapters ?? {})!==JSON.stringify(loadProfiles(profilesPath).adapters ?? {})) throw new Error('adapters cannot be changed from the dashboard');
