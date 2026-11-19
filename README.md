@@ -5,11 +5,11 @@
 A small local task queue that lets AI coding tools hand work to each other.
 You write a task once, choose who should do it — **Claude Code**, **Codex** or **Antigravity** (Gemini) — and collect the result in the same place.
 
-> **Status: early release (0.1.0).** Tested on **Windows x64** only. Most CLI messages and the detailed docs are in Korean for now.
+> **Status: early release (0.2.0).** Tested on **Windows x64** only. Most CLI messages and the detailed docs are in Korean for now.
 >
 > agent-bridge is an independent project. It is not affiliated with or endorsed by Anthropic, OpenAI or Google.
 
-> **Gemini users, please read.** Connecting Gemini with your personal Google account may violate Google's terms. The [Antigravity FAQ](https://antigravity.google/docs/faq/) says using third-party tools with an Antigravity login is not allowed and can lead to account suspension. The next version lets you choose a Gemini API key instead (recommended) and asks for your consent before the personal-account method can be used. Release 0.1.0 supports only the personal-account method.
+> **Gemini users, please read.** Connecting Gemini with your personal Google account may violate Google's terms. The [Antigravity FAQ](https://antigravity.google/docs/faq/) says using third-party tools with an Antigravity login is not allowed and can lead to account suspension. From 0.2.0 you choose the method yourself: a Gemini API key (recommended), or the personal-account method after accepting this risk. See [Settings](#settings-which-ais-to-use-and-how-gemini-signs-in). Release 0.1.0 supported only the personal-account method.
 
 ## What it does
 

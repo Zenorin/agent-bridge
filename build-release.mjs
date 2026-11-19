@@ -43,7 +43,7 @@ export function buildRelease(source,output,{node=process.execPath}={}) {
   }
  }
  hashTree(root);
- const manifest={name:'agent-bridge',version:'0.1.0',platform:'win32',arch:'x64',runtime,files:hashes};
+ const manifest={name:'agent-bridge',version:'0.2.0',platform:'win32',arch:'x64',runtime,files:hashes};
  writeFileSync(path.join(root,'manifest.json'),JSON.stringify(manifest,null,2));
  const packed=spawnSync('powershell.exe',['-NoProfile','-NonInteractive','-Command','Compress-Archive -LiteralPath $env:BRIDGE_RELEASE_FOLDER -DestinationPath $env:BRIDGE_RELEASE_ZIP'],
   {env:{...process.env,BRIDGE_RELEASE_FOLDER:root,BRIDGE_RELEASE_ZIP:zip},encoding:'utf8',windowsHide:true});

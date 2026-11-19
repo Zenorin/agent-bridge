@@ -1,6 +1,6 @@
 {
   "name": "agent-bridge",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A local task queue that lets Claude Code, Codex and Antigravity hand work to each other.",
   "license": "MIT",
   "private": true,

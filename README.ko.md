@@ -5,11 +5,11 @@
 AI 코딩 도구끼리 일을 주고받게 해 주는 작은 로컬 작업함이에요.
 작업을 한 번 적고, **Claude Code**, **Codex**, **Antigravity**(Gemini) 중 누구에게 맡길지 고른 뒤, 결과를 한곳에서 받아요.
 
-> **상태: 초기 버전(0.1.0).** **Windows x64**에서만 확인했어요.
+> **상태: 초기 버전(0.2.0).** **Windows x64**에서만 확인했어요.
 >
 > agent-bridge는 개인이 만든 독립 프로젝트예요. Anthropic, OpenAI, Google과 관계가 없고 공식 도구가 아니에요.
 
-> **Gemini를 쓰실 분은 꼭 읽어 주세요.** 개인 Google 계정으로 Gemini를 연결하면 Google 약관 위반이 될 수 있어요. [Antigravity FAQ](https://antigravity.google/docs/faq/)는 다른 프로그램이 Antigravity 로그인을 이용하는 것을 금지하고, 계정이 정지될 수 있다고 안내해요. 다음 버전부터는 Gemini API 키 방식(권장)을 고를 수 있고, 개인 계정 방식은 위험 안내에 동의해야 쓸 수 있어요. 0.1.0은 개인 계정 방식만 지원해요.
+> **Gemini를 쓰실 분은 꼭 읽어 주세요.** 개인 Google 계정으로 Gemini를 연결하면 Google 약관 위반이 될 수 있어요. [Antigravity FAQ](https://antigravity.google/docs/faq/)는 다른 프로그램이 Antigravity 로그인을 이용하는 것을 금지하고, 계정이 정지될 수 있다고 안내해요. 0.2.0부터는 연결 방식을 직접 골라요. Gemini API 키 방식(권장)을 쓰거나, 이 위험에 동의한 뒤 개인 계정 방식을 쓸 수 있어요. 아래 [설정](#설정-쓸-ai와-gemini-연결-방식)을 보세요. 0.1.0은 개인 계정 방식만 지원했어요.
 
 ## 하는 일
 

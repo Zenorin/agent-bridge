@@ -14,7 +14,7 @@ import {normalizeUsage,callTracker} from './usage.mjs';
 import {wirePacket,verifyWire,responseSchema,contractInstructions} from './contracts.mjs';
 import { loadProfiles, resolveProfile, inspectRuntime, planRuntime, verifyRuntime, runtimeFlags, taskPacket, replyPacket } from './profiles.mjs';
 
-export const BRIDGE_VERSION = "0.1.0";
+export const BRIDGE_VERSION = "0.2.0";
 // Only flags made of these characters may pass through the Windows shell used for codex.cmd.
 const SHELL_SAFE_ARG = /^[\w.\-=:/]+$/;
 

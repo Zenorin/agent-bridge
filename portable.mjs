@@ -80,7 +80,7 @@ export async function portableMain(argv=process.argv.slice(2)) {
     console.log(agent+': '+copy.call[row.call]+' / '+copy.authentication[row.authentication]+(row.auth_mode?' ('+copy.authMode[row.auth_mode]+')':''));
     if(row.reason)console.log('  '+(copy.reasons[row.reason] ?? row.reason));
     if(row.provider_error)console.log('  '+row.provider_error);
-    if(row.usage)console.log('  '+copy.usage+': '+JSON.stringify(row.usage.turn));
+    if(row.usage)console.log('  '+copy.usageLabel+': '+JSON.stringify(row.usage.turn));
    }
    return controller.signal.aborted?130:report.ok?0:1;
   }finally{process.removeListener('SIGINT',abort);process.removeListener('SIGTERM',abort);}

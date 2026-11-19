@@ -104,7 +104,9 @@ export async function checkConnections(found,{env=process.env,timeoutMs=90_000,s
    if(!result.reason&&result.exitCode===0&&completed&&matched){row.call='passed';row.authentication='verified';}
    else{row.call='failed';row.reason=result.reason ?? (result.exitCode!==0?failure(providerError||result.text):'unexpected_reply');if(row.reason==='authentication')row.authentication='missing';if(providerError)row.provider_error=safeError(providerError);if(row.reason==='unexpected_reply')row.response_shape=responseShape;}
   }
-  report.ok=Object.values(agents).every(row=>row.call==='passed');return report;
+  // Agents the user switched off are not part of the verdict; at least one agent must still pass.
+  const checked=Object.values(agents).filter(row=>row.reason!=='disabled');
+  report.ok=checked.length>0&&checked.every(row=>row.call==='passed');return report;
  }finally{
   if(path.dirname(path.resolve(cwd))!==tempRoot)throw new Error('Unexpected temporary check path');
   try{rmSync(cwd,{recursive:true,force:true});}catch(error){report.temporary_cleanup={status:'retained',reason:error.code ?? 'cleanup_failed'};}

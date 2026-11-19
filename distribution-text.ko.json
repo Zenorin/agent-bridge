@@ -40,7 +40,8 @@
     "authMode": {
       "api-key": "Gemini API 키",
       "account": "개인 Google 계정"
-    }
+    },
+    "usageLabel": "사용량"
   },
   "agentDisabled": "설정에서 꺼 둔 에이전트입니다. 대시보드의 [설정]이나 settings 명령으로 켤 수 있습니다.",
   "geminiAuth": {

@@ -126,7 +126,11 @@ test('connection check skips Gemini until a method is chosen and probes with the
  const [call]=readFileSync(log,'utf8').trim().split('\n').map(JSON.parse);
  assert.equal(call.hasGeminiKey,true);assert.equal(sessionSettings(call.args).modelProvider,'gemini');
  const off=await checkConnections({...found(null),agents:[],clients:{gemini:{installed:true,enabled:false}}},{env});
- assert.equal(off.agents.gemini.reason,'disabled');
+ assert.equal(off.agents.gemini.reason,'disabled');assert.equal(off.ok,false);
+ // A switched-off agent does not fail the check when another agent passed.
+ const mixed=await checkConnections({agents:['gemini'],clients:{codex:{installed:true,enabled:false},gemini:{installed:true,enabled:true,auth:{mode:'api-key',default:'api-key'}}},
+  workers:{gemini:{command:process.execPath,args:[connectionCli]}}},{env});
+ assert.equal(mixed.agents.codex.reason,'disabled');assert.equal(mixed.ok,true);
 });
 
 test('dashboard settings API saves through the provider and updates available agents',async t=>{
